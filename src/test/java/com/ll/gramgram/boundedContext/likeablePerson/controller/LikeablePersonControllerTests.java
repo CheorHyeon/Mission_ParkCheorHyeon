@@ -149,4 +149,22 @@ public class LikeablePersonControllerTests {
                         """.stripIndent().trim())));
         ;
     }
+
+    @Test
+    @DisplayName("user3에서 호감 표시한 insta_user4 삭제")
+    @WithUserDetails("user3")
+    void t006() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(get("/likeablePerson/delete/1")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("deleteList"))
+                .andExpect(status().is3xxRedirection());
+        ;
+    }
 }

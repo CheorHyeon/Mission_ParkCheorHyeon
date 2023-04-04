@@ -1,16 +1,19 @@
 package com.ll.gramgram.boundedContext.likeablePerson.service;
 
+import com.ll.gramgram.DataNotFoundException;
 import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
 import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
 import com.ll.gramgram.boundedContext.member.entity.Member;
+import com.ll.gramgram.standard.util.Ut;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +46,26 @@ public class LikeablePersonService {
         likeablePersonRepository.save(likeablePerson); // 저장
 
         return RsData.of("S-1", "입력하신 인스타유저(%s)를 호감상대로 등록되었습니다.".formatted(username), likeablePerson);
+    }
+
+    // Transactional으로 반환 후 객체 삭제하고 저장하도록 구현, return에 likeablePerson 사용 가능
+    @Transactional
+    public RsData<LikeablePerson> delete(LikeablePerson likeablePerson) {
+        likeablePersonRepository.delete(likeablePerson);
+        return RsData.of("S-1", "Delete Complete", likeablePerson);
+    }
+
+    public LikeablePerson findById(Long Id) {
+
+        Optional<LikeablePerson> lp = likeablePersonRepository.findById(Id);
+
+        if(lp.isPresent()) {
+           return lp.get();
+        }
+
+        else {
+            throw new DataNotFoundException("question not found");
+        }
     }
 
     public List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId) {
