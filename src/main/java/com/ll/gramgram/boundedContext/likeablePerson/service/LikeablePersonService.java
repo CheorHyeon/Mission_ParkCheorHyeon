@@ -48,7 +48,7 @@ public class LikeablePersonService {
         return RsData.of("S-1", "입력하신 인스타유저(%s)를 호감상대로 등록되었습니다.".formatted(username), likeablePerson);
     }
 
-    // Transactional으로 반환 후 객체 삭제하고 저장하도록 구현, return에 likeablePerson 사용 가능
+    // Transactional으로 반환 후 객체 삭제하고 저장하도록 구현(save 하지 않고도)
     @Transactional
     public RsData<LikeablePerson> delete(LikeablePerson likeablePerson) {
         likeablePersonRepository.delete(likeablePerson);

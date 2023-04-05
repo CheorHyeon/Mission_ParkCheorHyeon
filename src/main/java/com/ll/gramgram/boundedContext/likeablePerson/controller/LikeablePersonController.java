@@ -82,14 +82,14 @@ public class LikeablePersonController {
 
         // (1)-1 인스타 등록도 안되어있으면 호감 표시가 불가능하니 소유자가 될 수 없으므로 바로 실패 코드
         if (!member.hasConnectedInstaMember()) {
-            return rq.redirectWithMsg("likeablePerson/list", RsData.of("F-1", "호감 표시자가 아닙니다."));
+            return rq.redirectWithMsg("likeablePerson/list", RsData.of("F-1", "인스타ID를 먼저 등록해주세요"));
         }
 
         // (2) 삭제 하려는 likeable_person 테이블 내에 from insta id(올린 사람의 인스타 정보)와, 로그인 한 사람이 동일한 사람인지 비교
         if ((likeablePerson.getFromInstaMember().getId()) == (member.getInstaMember().getId())) {
             //(3) 동일한 사람임을 확인했으면 서비스에서 삭제 진행
             RsData<LikeablePerson> deletePerson = likeablePersonService.delete(likeablePerson);
-            return rq.redirectWithMsg("likeablePerson/list", deletePerson);
+            return rq.redirectWithMsg("/likeablePerson/list", deletePerson);
         }
 
         return "usr/likeablePerson/list";

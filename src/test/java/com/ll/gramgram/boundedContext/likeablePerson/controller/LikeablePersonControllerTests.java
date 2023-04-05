@@ -164,7 +164,9 @@ public class LikeablePersonControllerTests {
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
                 .andExpect(handler().methodName("deleteList"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().is3xxRedirection())
+                // /likeablePerson/delete 뒤에 붙는 bug 해결 필요
+                .andExpect(redirectedUrlPattern("/likeablePerson/list**"));
         ;
     }
 }
