@@ -31,6 +31,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String oauthId = oAuth2User.getName();
 
+        // 카카오 앱에 회원가입 하면 발생하는 고유 번호
         String providerTypeCode = userRequest.getClientRegistration().getRegistrationId().toUpperCase();
 
         String username = providerTypeCode + "__%s".formatted(oauthId);
