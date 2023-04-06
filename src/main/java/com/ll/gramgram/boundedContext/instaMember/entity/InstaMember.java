@@ -41,4 +41,20 @@ public class InstaMember {
     @LazyCollection(LazyCollectionOption.EXTRA)  // 지연 로딩에 대해 즉시로딩하게 해줌
     @Builder.Default // @Buider가 있으면 new ArrayList<>(); 가 작동하지 않기에 이거 붙여야 함
     private List<LikeablePerson> fromLikeablePeople = new ArrayList<>();
+
+    @OneToMany(mappedBy = "toInstaMember", cascade = {CascadeType.ALL})
+    @OrderBy("id desc") // 정렬, id는 toLikeablePerson의 id를 기준 정렬
+    @LazyCollection(LazyCollectionOption.EXTRA)  // 지연 로딩에 대해 즉시로딩하게 해줌
+    @Builder.Default // @Buider가 있으면 new ArrayList<>(); 가 작동하지 않기에 이거 붙여야 함
+    private List<LikeablePerson> toLikeablePeople = new ArrayList<>();
+
+    public void addFromLikeablePerson(LikeablePerson likeablePerson) {
+        // 정렬 기준 : desc 이기에 제일 첫번째로 삽입
+        fromLikeablePeople.add(0, likeablePerson);
+    }
+
+    public void addToLikeablePerson(LikeablePerson likeablePerson) {
+        // 정렬 기준 : desc 이기에 제일 첫번째로 삽입
+        toLikeablePeople.add(0, likeablePerson);
+    }
 }
