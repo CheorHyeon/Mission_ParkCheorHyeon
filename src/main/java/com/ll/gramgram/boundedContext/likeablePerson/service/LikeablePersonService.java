@@ -49,8 +49,9 @@ public class LikeablePersonService {
     // Transactional으로 반환 후 객체 삭제하고 저장하도록 구현(save 하지 않고도)
     @Transactional
     public RsData<LikeablePerson> delete(LikeablePerson likeablePerson) {
+        String deleteName = likeablePerson.getToInstaMember().getUsername();
         likeablePersonRepository.delete(likeablePerson);
-        return RsData.of("S-1", "성공적으로 삭제되었습니다.", likeablePerson);
+        return RsData.of("S-1", "%s번 상대에 대한 호감이 삭제되었습니다.".formatted(deleteName), likeablePerson);
     }
 
     public LikeablePerson findById(Long Id) {

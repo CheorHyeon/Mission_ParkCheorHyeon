@@ -87,11 +87,21 @@ public class LikeablePersonController {
             return rq.redirectWithMsg("likeablePerson/list", RsData.of("F-1", "인스타ID를 먼저 등록해주세요"));
         }
 
+        // (1)-2 호감 표시 데이터가 없는 경우 오류 처리
+        if(likeablePerson == null) {
+            return rq.historyBack("해당 번호로 등록한 호감정보가 없습니다.");
+        }
+
         // (2) 삭제 하려는 likeable_person 테이블 내에 from insta id(올린 사람의 인스타 정보)와, 로그인 한 사람이 동일한 사람인지 비교
         if ((likeablePerson.getFromInstaMember().getId()) == (member.getInstaMember().getId())) {
             //(3) 동일한 사람임을 확인했으면 서비스에서 삭제 진행
             RsData<LikeablePerson> deletePerson = likeablePersonService.delete(likeablePerson);
             return rq.redirectWithMsg("/likeablePerson/list", deletePerson);
+        }
+
+        // (2)-1 올린 사람과 현재 사용자가 같지 않은 경우 오류
+        if ((likeablePerson.getFromInstaMember().getId()) != (member.getInstaMember().getId())) {
+            return rq.historyBack("사용자가 표시한 호감이 아닙니다.");
         }
 
         return "usr/likeablePerson/list";
