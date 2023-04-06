@@ -55,7 +55,7 @@ public class LikeablePersonService {
     // Transactional으로 반환 후 객체 삭제하고 저장하도록 구현(save 하지 않고도)
     @Transactional
     public RsData<LikeablePerson> delete(LikeablePerson likeablePerson) {
-        String deleteName = likeablePerson.getToInstaMember().getUsername();
+        String deleteName = likeablePerson.getToInstaMember().getUsername();  // 삭제 상태 가기 전 미리 String 받아두기
         likeablePersonRepository.delete(likeablePerson);
         return RsData.of("S-1", "%s번 상대에 대한 호감이 삭제되었습니다.".formatted(deleteName), likeablePerson);
     }
@@ -71,9 +71,5 @@ public class LikeablePersonService {
         else {
             return null;
         }
-    }
-
-    public List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId) {
-        return likeablePersonRepository.findByFromInstaMemberId(fromInstaMemberId);
     }
 }
