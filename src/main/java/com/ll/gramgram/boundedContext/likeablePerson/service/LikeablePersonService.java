@@ -1,13 +1,11 @@
 package com.ll.gramgram.boundedContext.likeablePerson.service;
 
-import com.ll.gramgram.DataNotFoundException;
 import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
 import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
 import com.ll.gramgram.boundedContext.member.entity.Member;
-import com.ll.gramgram.standard.util.Ut;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +62,7 @@ public class LikeablePersonService {
         }
 
         else {
-            throw new DataNotFoundException("question not found");
+            return null;
         }
     }
 

@@ -31,6 +31,7 @@ public class LikeablePersonController {
     private final LikeablePersonService likeablePersonService;
     private final MemberService memberService;
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/add")
     public String showAdd() {
         return "usr/likeablePerson/add";
@@ -42,7 +43,7 @@ public class LikeablePersonController {
         private final String username;
         private final int attractiveTypeCode;
     }
-
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/add")
     public String add(@Valid AddForm addForm) {
         RsData<LikeablePerson> createRsData = likeablePersonService.like(rq.getMember(), addForm.getUsername(), addForm.getAttractiveTypeCode());
@@ -53,7 +54,7 @@ public class LikeablePersonController {
 
         return rq.redirectWithMsg("/likeablePerson/list", createRsData);
     }
-
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/list")
     public String showList(Model model) {
         InstaMember instaMember = rq.getMember().getInstaMember();
@@ -68,7 +69,7 @@ public class LikeablePersonController {
     }
 
     @PreAuthorize("isAuthenticated()") // 로그인을 하지 않은 경우는, 해당 어노테이션으로 고려대상이 아님(어노테이션 : 로그인 여부 검사)
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     @Transactional
     public String deleteList(Principal principal, @PathVariable("id") Long id) {
         // 생각한 전체 과정
