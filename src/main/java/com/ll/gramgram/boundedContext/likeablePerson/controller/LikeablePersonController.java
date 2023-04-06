@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/likeablePerson")
@@ -97,7 +98,7 @@ public class LikeablePersonController {
         }
 
         // (2) 호감표시한 사람과 로그인한 멤버가 같은지 비교(올린 사람과 현재 사용자가 같지 않은 경우 오류)
-        if ((likeablePerson.getFromInstaMember().getId()) != (member.getInstaMember().getId())) {
+        if ((!Objects.equals(likeablePerson.getFromInstaMember().getId(), member.getInstaMember().getId()))) {
             return rq.historyBack("사용자가 표시한 호감이 아닙니다.");
         }
 
