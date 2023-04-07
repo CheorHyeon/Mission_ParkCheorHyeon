@@ -103,11 +103,11 @@ public class LikeablePersonController {
         }
 
         // (3) 1~2조건들이 모두 거짓이라면, 삭제할 조건 충족
-            RsData<LikeablePerson> deletePerson = likeablePersonService.delete(likeablePerson);
+            RsData<LikeablePerson> deleteRsData = likeablePersonService.delete(likeablePerson);
 
-            if(deletePerson.isFail())
-                return rq.historyBack(deletePerson);
+            if(deleteRsData.isFail())
+                return rq.historyBack(deleteRsData);
 
-            return rq.redirectWithMsg("/likeablePerson/list", deletePerson);
+            return rq.redirectWithMsg("/likeablePerson/list", deleteRsData);
     }
 }
