@@ -39,7 +39,7 @@ public class Member {
     private InstaMember instaMember;
 
     // 이 함수 자체는 만들어야 한다. 스프링 시큐리티 규격
-    public List<? extends GrantedAuthority> getGrantedAuthorities() {
+    public List<GrantedAuthority> getGrantedAuthorities() {
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
         // 모든 멤버는 member 권한을 가진다.
