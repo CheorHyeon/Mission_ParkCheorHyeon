@@ -74,40 +74,16 @@ public class LikeablePersonController {
     @PostMapping("/delete/{id}")
     @Transactional
     public String delete(@PathVariable("id") Long id) {
-        // 생각한 전체 과정
-        // (1) 삭제 하려는 호감 정보와 현재 로그인 한 사람의 정보를 가져온다.
-        // (2) 삭제 하려는 likeable_person 테이블 내에 from insta id(올린 사람의 인스타 정보)와, 로그인 한 사람이 동일한 사람인지 비교
-        // (3) (2)의 결과가 동일인이면 삭제, 아닐경우 오류 메시지 출력
-        // 로그인을 하지 않은 경우
-
-        // (1) 삭제 하려는 호감 정보와 현재 로그인 한 사람의 정보를 가져온다.
-        // (1)-1 삭제 하려는 호감 정보를 가져온다.
         LikeablePerson likeablePerson = likeablePersonService.findById(id).orElse(null);
 
-        // (1)-1 @호감 표시 데이터가 없는 경우 오류 처리
-        if(likeablePerson == null) {
-            return rq.historyBack("등록한 호감정보가 없습니다.");
-        }
+        RsData canActorDeleteRsData = likeablePersonService.canActorDelete(rq.getMember(), likeablePerson);
 
-        // (1)-2 현재 로그인 한 사람의 정보를 가져온다.
-        Member member = memberService.findByUsername((rq.getMember()).getUsername()).orElseThrow();
+        if (canActorDeleteRsData.isFail()) return rq.historyBack(canActorDeleteRsData);
 
-        // (1)-2 @ 로그인 한 회원 인스타 등록도 안되어있으면 호감 표시가 불가능하니 소유자가 될 수 없으므로 바로 실패 코드
-        if (!member.hasConnectedInstaMember()) {
-            return rq.redirectWithMsg("likeablePerson/list", RsData.of("F-1", "인스타ID를 먼저 등록해주세요"));
-        }
+        RsData deleteRsData = likeablePersonService.delete(likeablePerson);
 
-        // (2) 호감표시한 사람과 로그인한 멤버가 같은지 비교(올린 사람과 현재 사용자가 같지 않은 경우 오류)
-        if ((!Objects.equals(likeablePerson.getFromInstaMember().getId(), member.getInstaMember().getId()))) {
-            return rq.historyBack("사용자가 표시한 호감이 아닙니다.");
-        }
+        if (deleteRsData.isFail()) return rq.historyBack(deleteRsData);
 
-        // (3) 1~2조건들이 모두 거짓이라면, 삭제할 조건 충족
-            RsData<LikeablePerson> deleteRsData = likeablePersonService.delete(likeablePerson);
-
-            if(deleteRsData.isFail())
-                return rq.historyBack(deleteRsData);
-
-            return rq.redirectWithMsg("/likeablePerson/list", deleteRsData);
+        return rq.redirectWithMsg("/likeablePerson/list", deleteRsData);
     }
 }
