@@ -167,12 +167,12 @@ public class LikeablePersonControllerTests {
         // THEN
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("deleteList"))
+                .andExpect(handler().methodName("delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("/likeablePerson/list**"));
 
         //테스트 추가
-        assertThat(likeablePersonService.findById(1L)).isNull();
+        assertThat(likeablePersonService.findById(1L).isPresent()).isEqualTo(false);
 
     }
 
@@ -191,7 +191,7 @@ public class LikeablePersonControllerTests {
         // THEN
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("deleteList"))
+                .andExpect(handler().methodName("delete"))
                 .andExpect(status().is4xxClientError())
         ;
     }
@@ -211,10 +211,10 @@ public class LikeablePersonControllerTests {
         // THEN
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("deleteList"))
+                .andExpect(handler().methodName("delete"))
                 .andExpect(status().is4xxClientError())
         ;
 
-        assertThat(likeablePersonService.findById(1L)).isNotNull();
+        assertThat(likeablePersonService.findById(1L).isPresent()).isEqualTo(true);
     }
 }

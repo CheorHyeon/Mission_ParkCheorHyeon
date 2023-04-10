@@ -61,16 +61,7 @@ public class LikeablePersonService {
         return RsData.of("S-1", "%s번 상대에 대한 호감이 삭제되었습니다.".formatted(deleteName), likeablePerson);
     }
 
-    public LikeablePerson findById(Long Id) {
-
-        Optional<LikeablePerson> lp = likeablePersonRepository.findById(Id);
-
-        if(lp.isPresent()) {
-           return lp.get();
-        }
-
-        else {
-            return null;
-        }
+    public Optional<LikeablePerson> findById(Long id) {
+        return likeablePersonRepository.findById(id);
     }
 }

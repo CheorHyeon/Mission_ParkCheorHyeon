@@ -73,7 +73,7 @@ public class LikeablePersonController {
     @PreAuthorize("isAuthenticated()") // 로그인을 하지 않은 경우는, 해당 어노테이션으로 고려대상이 아님(어노테이션 : 로그인 여부 검사)
     @PostMapping("/delete/{id}")
     @Transactional
-    public String deleteList(@PathVariable("id") Long id) {
+    public String delete(@PathVariable("id") Long id) {
         // 생각한 전체 과정
         // (1) 삭제 하려는 호감 정보와 현재 로그인 한 사람의 정보를 가져온다.
         // (2) 삭제 하려는 likeable_person 테이블 내에 from insta id(올린 사람의 인스타 정보)와, 로그인 한 사람이 동일한 사람인지 비교
@@ -82,7 +82,7 @@ public class LikeablePersonController {
 
         // (1) 삭제 하려는 호감 정보와 현재 로그인 한 사람의 정보를 가져온다.
         // (1)-1 삭제 하려는 호감 정보를 가져온다.
-        LikeablePerson likeablePerson = likeablePersonService.findById(id);
+        LikeablePerson likeablePerson = likeablePersonService.findById(id).orElse(null);
 
         // (1)-1 @호감 표시 데이터가 없는 경우 오류 처리
         if(likeablePerson == null) {
