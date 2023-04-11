@@ -30,23 +30,24 @@ public class LikeablePersonService {
             return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
         }
 
+        // 기존 코드
         InstaMember fromInstaMember = member.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
 
-        // 호감표시 리스트 요소 검사
-        for (LikeablePerson findmember : fromInstaMember.getFromLikeablePeople()) {
+        // 호감표시 리스트 요소 검사(동일한 사용자에게 호감 표시를 했는지)
+        for (LikeablePerson findMember : fromInstaMember.getFromLikeablePeople()) {
             // 중복인지 검사
-            if (Objects.equals(findmember.getToInstaMember().getUsername(), username)) {
-                // 매력까지 같으면 실패
-                if (findmember.getAttractiveTypeCode() == attractiveTypeCode) {
+            if (Objects.equals(findMember.getToInstaMember().getUsername(), username)) {
+                // 매력까지 같으면 중복인 사람에게 호감 표시로 실패
+                if (findMember.getAttractiveTypeCode() == attractiveTypeCode) {
                     return RsData.of("F-2", "중복 호감 표시가 불가능합니다.");
                 }
                 // 매력이 달라졌으면 호감 사유 변겅
-                return modifyLike(findmember, fromInstaMember, toInstaMember, attractiveTypeCode);
+                return modifyLike(findMember, fromInstaMember, toInstaMember, attractiveTypeCode);
             }
         }
 
-        // 동일 사용자가 아닌 경우 실행
+        // 호감 표시자가 동일한 사람이 아닌 경우 실행 (기존 코드)
         LikeablePerson likeablePerson = LikeablePerson
                 .builder()
                 .fromInstaMember(fromInstaMember) // 호감을 표시하는 사람의 인스타 멤버
@@ -94,6 +95,7 @@ public class LikeablePersonService {
 
     }
 
+    // 동일한 사용자에 대한 호감 표시에 호감 표시 사유가 변경될 경우 메소드 구현
     @Transactional
     public RsData<LikeablePerson> modifyLike(LikeablePerson findmember, InstaMember fromInstaMember, InstaMember toInstaMember, int attractiveTypeCode) {
 
@@ -104,15 +106,17 @@ public class LikeablePersonService {
 
         // save 전에 해줘야 함 : 영속성 컨텍스트에서 관리되는 findmember의 속성을 변경하고 저장(modifyLikeablePerson 자체를 저장 x)
         // 영속성 컨텍스트에서 그렇다 쳐도.. 객체 자체는 상관 없어서 save 이후에 해도 될 것 같은데 안됨...
+        // 이유를 모르겠음..
         String beforeAttractive = findmember.getAttractiveTypeDisplayName();
 
         likeablePersonRepository.save(modifyLikeablePerson); // 저장
 
+        // 같은 객체인지 확인용 코드 -> 출력 안됨 -> 수정 전, 후 객체가 다름을 확인
         if(Objects.equals(modifyLikeablePerson, findmember)) {
-            System.out.println("제발 출력되지마라..!"); // 같은 객체가 아닌데 왜 save 전에..!
+            System.out.println("제발 출력되지마라..!");
         }
 
-        // 기존 리스트 삭제(의미 없는 데이터), 위에 같은 객체 비교 했을때 다른 객체이기에 삭제 필요
+        // 기존 리스트 삭제 : 위에 같은 객체 비교 했을때 다른 객체이기임을 확인하여 삭제 필요
         fromInstaMember.getFromLikeablePeople().remove(findmember);
         toInstaMember.getToLikeablePeople().remove(findmember);
 
@@ -120,7 +124,7 @@ public class LikeablePersonService {
         fromInstaMember.addFromLikeablePerson(modifyLikeablePerson);
         toInstaMember.addToLikeablePerson(modifyLikeablePerson);
 
-        // 변경된 사용자명과 호감사유
+        // 호감 사유를 변경한 사용자명과 변경된 호감사유 저장 변수
         String changeInstaUsername = findmember.getToInstaMember().getUsername();
         String afterAttractive = modifyLikeablePerson.getAttractiveTypeDisplayName();
         return RsData.of("S-2", "%s에 대한 호감사유를 %s에서 %s으로 변경합니다.".formatted(changeInstaUsername, beforeAttractive, afterAttractive));

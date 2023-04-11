@@ -265,4 +265,34 @@ public class LikeablePersonControllerTests {
         // 변경된 호감 사유 반영 여부 테스트
         assertThat(likeablePersonService.findById(2L).get().getAttractiveTypeCode()).isEqualTo(1);
     }
+
+    @Test
+    @DisplayName("호감 표시 10명 이상일 때 호감 표시 사이트 접속 불가 테스트")
+    @WithUserDetails("user3")
+    void t011() throws Exception {
+        ResultActions resultActions = null;
+        // WHEN
+        // 기존 user3의 호감 2명 + 8명 추가
+        for(int i=8; i>0; i--) {
+            resultActions = mvc
+                    .perform(post("/likeablePerson/add")
+                            .with(csrf()) // CSRF 키 생성
+                            .param("username", "aaaa" + i)
+                            .param("attractiveTypeCode", "1")
+                    )
+                    .andDo(print());
+        }
+
+        resultActions = mvc
+                .perform(get("/likeablePerson/add")
+                )
+                .andDo(print());
+
+
+        // THEN, 입구컷이 되는지 테스트
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("showAdd"))
+                .andExpect(status().is4xxClientError());  // historyBack 작동하는지 검사, 수정 필요
+    }
 }

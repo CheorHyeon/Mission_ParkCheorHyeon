@@ -38,7 +38,7 @@ public class LikeablePersonController {
 
         // 컨트롤러 단에서 간단한 작업(호감 표시 인원 파악) 입구 컷(등록폼도 안보이게)
         if(IsSizeFull(rq.getMember()) == true) {
-            return rq.redirectWithMsg("/likeablePerson/list", "최대 10명 까지 호감 표시가 가능합니다. 사유 변경을 희망하시면 삭제 후 재등록 바랍니다.");
+            return rq.historyBack( "최대 10명 까지 호감 표시가 가능합니다. 사유 변경을 희망하시면 삭제 후 재등록 바랍니다.");
         }
 
         return "usr/likeablePerson/add";
