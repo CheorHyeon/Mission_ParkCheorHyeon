@@ -36,13 +36,17 @@ public class InstaMember {
     @Setter
     private String gender;
 
-    @OneToMany(mappedBy = "fromInstaMember", cascade = {CascadeType.ALL})
+    // 사용자 정보 삭제하면 호감 리스트 삭제되어야 하니 remove로 지정
+
+    @OneToMany(mappedBy = "fromInstaMember", cascade = {CascadeType.REMOVE})
     @OrderBy("id desc") // 정렬, id는 fromLikeablePerson의 id를 기준 정렬
     @LazyCollection(LazyCollectionOption.EXTRA)  // 지연 로딩에 대해 즉시로딩하게 해줌, Count 실행(N+1 발생) 단 갯수만 파악하니 낫뱃
     @Builder.Default // @Buider가 있으면 new ArrayList<>(); 가 작동하지 않기에 이거 붙여야 함
+    @ToString.Exclude
     private List<LikeablePerson> fromLikeablePeople = new ArrayList<>();
 
-    @OneToMany(mappedBy = "toInstaMember", cascade = {CascadeType.ALL})
+    // 사용자 정보 삭제하면 호감 리스트 삭제되어야 하니 remove로 지정
+    @OneToMany(mappedBy = "toInstaMember", cascade = {CascadeType.REMOVE})
     @OrderBy("id desc") // 정렬, id는 toLikeablePerson의 id를 기준 정렬
     @LazyCollection(LazyCollectionOption.EXTRA)  // 지연 로딩에 대해 즉시로딩하게 해줌
     @Builder.Default // @Buider가 있으면 new ArrayList<>(); 가 작동하지 않기에 이거 붙여야 함
