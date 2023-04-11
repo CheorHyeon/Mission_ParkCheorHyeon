@@ -104,25 +104,10 @@ public class LikeablePersonService {
                 .attractiveTypeCode(attractiveTypeCode) //  수정할 것만 넣어주면 됨
                 .build();
 
-        // save 전에 해줘야 함 : 영속성 컨텍스트에서 관리되는 findmember의 속성을 변경하고 저장(modifyLikeablePerson 자체를 저장 x)
-        // 영속성 컨텍스트에서 그렇다 쳐도.. 객체 자체는 상관 없어서 save 이후에 해도 될 것 같은데 안됨...
-        // 이유를 모르겠음..
+        // save 전에 해줘야 함 : 영속성 컨텍스트에서는 id가 같은 객체를 동일한 객체로 인식하여, modify로 변경을 감지하면 find객체도 값이 동일하개 변경됨
         String beforeAttractive = findmember.getAttractiveTypeDisplayName();
 
         likeablePersonRepository.save(modifyLikeablePerson); // 저장
-
-        // 같은 객체인지 확인용 코드 -> 출력 안됨 -> 수정 전, 후 객체가 다름을 확인
-        if(Objects.equals(modifyLikeablePerson, findmember)) {
-            System.out.println("제발 출력되지마라..!");
-        }
-
-        // 기존 리스트 삭제 : 위에 같은 객체 비교 했을때 다른 객체이기임을 확인하여 삭제 필요
-        fromInstaMember.getFromLikeablePeople().remove(findmember);
-        toInstaMember.getToLikeablePeople().remove(findmember);
-
-        // 변경된 호감 표시 리스트 삽입
-        fromInstaMember.addFromLikeablePerson(modifyLikeablePerson);
-        toInstaMember.addToLikeablePerson(modifyLikeablePerson);
 
         // 호감 사유를 변경한 사용자명과 변경된 호감사유 저장 변수
         String changeInstaUsername = findmember.getToInstaMember().getUsername();

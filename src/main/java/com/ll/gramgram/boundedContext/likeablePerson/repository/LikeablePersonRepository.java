@@ -9,5 +9,6 @@ import java.util.Optional;
 // Integer -> Long 수정
 public interface LikeablePersonRepository extends JpaRepository<LikeablePerson, Long> {
     List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId);
-   Optional<LikeablePerson> findById(Long fromInstaMemberId);
+
+    Optional<LikeablePerson> findById(Long fromInstaMemberId);
 }
