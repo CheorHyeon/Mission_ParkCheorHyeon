@@ -31,7 +31,7 @@ public class LikeablePersonService {
             return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
         }
 
-        // 비정상적인 경로로 호감표시를 했을 때 10명 넘을 경우 실패 처리
+        // 10명이 된 순간, 11명쨰 입력 불가능
         if(IsSizeFull(member) == true) {
             return RsData.of("F-1", "최대 10명 까지 호감 표시가 가능합니다. 사유 변경을 희망하시면 삭제 후 재등록 바랍니다.");
         }
