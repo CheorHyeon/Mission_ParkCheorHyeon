@@ -1,5 +1,6 @@
 package com.ll.gramgram.boundedContext.likeablePerson.controller;
 
+import com.ll.gramgram.base.appConfig.AppConfig;
 import com.ll.gramgram.base.rq.Rq;
 import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
@@ -35,12 +36,6 @@ public class LikeablePersonController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/add")
     public String showAdd() {
-
-        // 컨트롤러 단에서 간단한 작업(호감 표시 인원 파악) 입구 컷(등록폼도 안보이게)
-        if(IsSizeFull(rq.getMember()) == true) {
-            return rq.historyBack( "최대 10명 까지 호감 표시가 가능합니다. 사유 변경을 희망하시면 삭제 후 재등록 바랍니다.");
-        }
-
         return "usr/likeablePerson/add";
     }
 
@@ -69,7 +64,10 @@ public class LikeablePersonController {
 
     // 호감표시 인원 검사를 위한 메소드
     private boolean IsSizeFull(Member logindMember) {
-        if(logindMember.getInstaMember().getFromLikeablePeople().size() >= 10) {
+
+        long likeablePersonFromMax = AppConfig.getLikeablePersonFromMax();
+
+        if(logindMember.getInstaMember().getFromLikeablePeople().size() >= likeablePersonFromMax) {
             return true;
         }
 

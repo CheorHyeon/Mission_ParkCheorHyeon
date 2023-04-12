@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -268,11 +269,12 @@ public class LikeablePersonControllerTests {
 
     @Test
     @DisplayName("호감 표시 10명 이상일 때 호감 표시 사이트 접속 불가 테스트")
+    @Rollback(value = false)
     @WithUserDetails("user3")
     void t011() throws Exception {
         ResultActions resultActions = null;
         // WHEN
-        // 기존 user3의 호감 2명 + 8명 추가
+        // 기존 user3의 호감 2명 + 8명 추가 = 최대 사이즈인 10명
         for(int i=8; i>0; i--) {
             resultActions = mvc
                     .perform(post("/likeablePerson/add")
@@ -284,15 +286,16 @@ public class LikeablePersonControllerTests {
         }
 
         resultActions = mvc
-                .perform(get("/likeablePerson/add")
-                )
-                .andDo(print());
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "aaaa" + 123)
+                        .param("attractiveTypeCode", "1")
+                );
 
-
-        // THEN, 입구컷이 되는지 테스트
+        // THEN, 10명을 넘게 등록하려 시도할 경우 historyback 작동하는지
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("showAdd"))
-                .andExpect(status().is4xxClientError());  // historyBack 작동하는지 검사, 수정 필요
+                .andExpect(handler().methodName("add"))
+                .andExpect(status().is4xxClientError());
     }
 }

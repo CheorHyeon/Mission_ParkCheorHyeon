@@ -1,5 +1,6 @@
 package com.ll.gramgram.boundedContext.likeablePerson.service;
 
+import com.ll.gramgram.base.appConfig.AppConfig;
 import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
 import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
@@ -28,6 +29,11 @@ public class LikeablePersonService {
 
         if (member.getInstaMember().getUsername().equals(username)) {
             return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
+        }
+
+        // 비정상적인 경로로 호감표시를 했을 때 10명 넘을 경우 실패 처리
+        if(IsSizeFull(member) == true) {
+            return RsData.of("F-1", "최대 10명 까지 호감 표시가 가능합니다. 사유 변경을 희망하시면 삭제 후 재등록 바랍니다.");
         }
 
         // 기존 코드
@@ -113,5 +119,17 @@ public class LikeablePersonService {
         String changeInstaUsername = findmember.getToInstaMember().getUsername();
         String afterAttractive = modifyLikeablePerson.getAttractiveTypeDisplayName();
         return RsData.of("S-2", "%s에 대한 호감사유를 %s에서 %s으로 변경합니다.".formatted(changeInstaUsername, beforeAttractive, afterAttractive));
+    }
+
+    // 호감표시 인원 검사를 위한 메소드
+    private boolean IsSizeFull(Member logindMember) {
+        long likeablePersonFromMax = AppConfig.getLikeablePersonFromMax();
+
+        // 10명이 등록된 상황이면 호감 표시가 불가능
+        if(logindMember.getInstaMember().getFromLikeablePeople().size() >= likeablePersonFromMax) {
+            return true;
+        }
+        // 10명 되기 전에는 표시 가능
+        return false;
     }
 }

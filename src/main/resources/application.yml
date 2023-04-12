@@ -54,3 +54,8 @@ logging:
     com.ll.gramgram: DEBUG  #패키지명
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.orm.jdbc.extract: TRACE
+
+custom:
+  likeablePerson:
+    from:
+      max: 10
