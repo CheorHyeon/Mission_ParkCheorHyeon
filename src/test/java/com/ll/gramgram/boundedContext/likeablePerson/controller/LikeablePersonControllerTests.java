@@ -269,7 +269,6 @@ public class LikeablePersonControllerTests {
 
     @Test
     @DisplayName("호감 표시 10명 이상일 때 호감 표시 사이트 접속 불가 테스트")
-    @Rollback(value = false)
     @WithUserDetails("user3")
     void t011() throws Exception {
         ResultActions resultActions = null;
