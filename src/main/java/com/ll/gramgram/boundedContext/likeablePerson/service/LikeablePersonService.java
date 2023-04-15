@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,42 +22,20 @@ public class LikeablePersonService {
     private final InstaMemberService instaMemberService;
 
     @Transactional
-    public RsData<LikeablePerson> like(Member member, String username, int attractiveTypeCode) {
-        if (member.hasConnectedInstaMember() == false) {
-            return RsData.of("F-2", "먼저 본인의 인스타그램 아이디를 입력해야 합니다.");
-        }
+    public RsData<LikeablePerson> like(Member actor, String username, int attractiveTypeCode) {
+        RsData canLikeRsData = canLike(actor, username, attractiveTypeCode);
 
-        if (member.getInstaMember().getUsername().equals(username)) {
-            return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
-        }
+        if (canLikeRsData.isFail()) return canLikeRsData;
 
-        // 10명이 된 순간, 11명쨰 입력 불가능
-        if(IsSizeFull(member) == true) {
-            return RsData.of("F-1", "최대 10명 까지 호감 표시가 가능합니다. 사유 변경을 희망하시면 삭제 후 재등록 바랍니다.");
-        }
+        if (canLikeRsData.getResultCode().equals("S-2")) return modifyAttractive(actor, username, attractiveTypeCode);
 
-        // 기존 코드
-        InstaMember fromInstaMember = member.getInstaMember();
+        InstaMember fromInstaMember = actor.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
 
-        // 호감표시 리스트 요소 검사(동일한 사용자에게 호감 표시를 했는지)
-        for (LikeablePerson findMember : fromInstaMember.getFromLikeablePeople()) {
-            // 중복인지 검사
-            if (Objects.equals(findMember.getToInstaMember().getUsername(), username)) {
-                // 매력까지 같으면 중복인 사람에게 호감 표시로 실패
-                if (findMember.getAttractiveTypeCode() == attractiveTypeCode) {
-                    return RsData.of("F-2", "중복 호감 표시가 불가능합니다.");
-                }
-                // 매력이 달라졌으면 호감 사유 변겅
-                return modifyLike(findMember, fromInstaMember, toInstaMember, attractiveTypeCode);
-            }
-        }
-
-        // 호감 표시자가 동일한 사람이 아닌 경우 실행 (기존 코드)
         LikeablePerson likeablePerson = LikeablePerson
                 .builder()
                 .fromInstaMember(fromInstaMember) // 호감을 표시하는 사람의 인스타 멤버
-                .fromInstaMemberUsername(member.getInstaMember().getUsername()) // 중요하지 않음
+                .fromInstaMemberUsername(actor.getInstaMember().getUsername()) // 중요하지 않음
                 .toInstaMember(toInstaMember) // 호감을 받는 사람의 인스타 멤버
                 .toInstaMemberUsername(toInstaMember.getUsername()) // 중요하지 않음
                 .attractiveTypeCode(attractiveTypeCode) // 1=외모, 2=능력, 3=성격
@@ -77,6 +55,11 @@ public class LikeablePersonService {
     // Transactional으로 반환 후 객체 삭제하고 저장하도록 구현(save 하지 않고도)
     @Transactional
     public RsData<LikeablePerson> delete(LikeablePerson likeablePerson) {
+        // 너가 생성한 좋아요가 사라졌어.
+        likeablePerson.getFromInstaMember().removeFromLikeablePerson(likeablePerson);
+
+        // 너가 받은 좋아요가 사라졌어.
+        likeablePerson.getToInstaMember().removeToLikeablePerson(likeablePerson);
         likeablePersonRepository.delete(likeablePerson);
         String likeCanceledUsername = likeablePerson.getToInstaMember().getUsername();
         return RsData.of("S-1", "%s님에 대한 호감을 취소하였습니다.".formatted(likeCanceledUsername));
@@ -86,7 +69,7 @@ public class LikeablePersonService {
         return likeablePersonRepository.findById(id);
     }
 
-    public RsData canActorDelete(Member actor, LikeablePerson likeablePerson) {
+    public RsData canDelete(Member actor, LikeablePerson likeablePerson) {
         if (likeablePerson == null) return RsData.of("F-1", "이미 삭제되었습니다.");
 
         // 수행자의 인스타계정 번호
@@ -101,35 +84,71 @@ public class LikeablePersonService {
 
     }
 
-    // 동일한 사용자에 대한 호감 표시에 호감 표시 사유가 변경될 경우 메소드 구현
-    @Transactional
-    public RsData<LikeablePerson> modifyLike(LikeablePerson findmember, InstaMember fromInstaMember, InstaMember toInstaMember, int attractiveTypeCode) {
+    private RsData canLike(Member actor, String username, int attractiveTypeCode) {
+        if (!actor.hasConnectedInstaMember()) {
+            return RsData.of("F-1", "먼저 본인의 인스타그램 아이디를 입력해주세요.");
+        }
 
-        LikeablePerson modifyLikeablePerson = findmember
-                .toBuilder()
-                .attractiveTypeCode(attractiveTypeCode) //  수정할 것만 넣어주면 됨
-                .build();
+        InstaMember fromInstaMember = actor.getInstaMember();
 
-        // save 전에 해줘야 함 : 영속성 컨텍스트에서는 id가 같은 객체를 동일한 객체로 인식하여, modify로 변경을 감지하면 find객체도 값이 동일하개 변경됨
-        String beforeAttractive = findmember.getAttractiveTypeDisplayName();
+        if (fromInstaMember.getUsername().equals(username)) {
+            return RsData.of("F-2", "본인을 호감상대로 등록할 수 없습니다.");
+        }
 
-        likeablePersonRepository.save(modifyLikeablePerson); // 저장
+        List<LikeablePerson> fromLikeablePeople = fromInstaMember.getFromLikeablePeople();
+        LikeablePerson fromLikeablePerson = fromLikeablePeople
+                .stream()
+                .filter(e -> e.getToInstaMember().getUsername().equals(username))
+                .findFirst()
+                .orElse(null);
 
-        // 호감 사유를 변경한 사용자명과 변경된 호감사유 저장 변수
-        String changeInstaUsername = findmember.getToInstaMember().getUsername();
-        String afterAttractive = modifyLikeablePerson.getAttractiveTypeDisplayName();
-        return RsData.of("S-2", "%s에 대한 호감사유를 %s에서 %s으로 변경합니다.".formatted(changeInstaUsername, beforeAttractive, afterAttractive));
-    }
+        if (fromLikeablePerson != null && fromLikeablePerson.getAttractiveTypeCode() == attractiveTypeCode) {
+            return RsData.of("F-3", "이미 %s님에 대해서 호감표시를 했습니다.".formatted(username));
+        }
 
-    // 호감표시 인원 검사를 위한 메소드
-    private boolean IsSizeFull(Member logindMember) {
         long likeablePersonFromMax = AppConfig.getLikeablePersonFromMax();
 
-        // 10명이 등록된 상황이면 호감 표시가 불가능
-        if(logindMember.getInstaMember().getFromLikeablePeople().size() >= likeablePersonFromMax) {
-            return true;
+        if (fromLikeablePerson != null) {
+            return RsData.of("S-2", "%s님에 대해 호감표시가 가능합니다.".formatted(username));
         }
-        // 10명 되기 전에는 표시 가능
-        return false;
+
+        if (fromLikeablePeople.size() >= likeablePersonFromMax) {
+            return RsData.of("F-4", "최대 %d명에 대해서만 호감표시가 가능합니다.".formatted(likeablePersonFromMax));
+        }
+
+        return RsData.of("S-1", "%s님에 대해서 호감표시가 가능합니다.".formatted(username));
+
+    }
+
+    @Transactional
+    public RsData modifyAttractive(Member member, String username, int attractiveTypeCode) {
+        // 액터가 생성한 `좋아요` 들 가져오기
+        List<LikeablePerson> fromLikeablePeople = member.getInstaMember().getFromLikeablePeople();
+
+        LikeablePerson fromLikeablePerson = fromLikeablePeople
+                .stream()
+                .filter(e -> e.getToInstaMember().getUsername().equals(username))
+                .findFirst()
+                .orElse(null);
+
+        if (fromLikeablePerson == null) {
+            return RsData.of("F-7", "호감표시를 하지 않았습니다.");
+        }
+
+        String oldAttractiveTypeDisplayName = fromLikeablePerson.getAttractiveTypeDisplayName();
+
+        LikeablePerson modifyFromLikeabePerson = fromLikeablePerson
+                .toBuilder()
+                .attractiveTypeCode(attractiveTypeCode)
+                .build();
+        likeablePersonRepository.save(modifyFromLikeabePerson);
+
+        String newAttractiveTypeDisplayName = modifyFromLikeabePerson.getAttractiveTypeDisplayName();
+
+        return RsData.of("S-3", "%s님에 대한 호감사유를 %s에서 %s(으)로 변경합니다.".formatted(username, oldAttractiveTypeDisplayName, newAttractiveTypeDisplayName), modifyFromLikeabePerson);
+    }
+
+    public Optional<LikeablePerson> findByFromInstaMember_usernameAndToInstaMember_username(String fromInstaMemberUsername, String toInstaMemberUsername) {
+        return likeablePersonRepository.findByFromInstaMember_usernameAndToInstaMember_username(fromInstaMemberUsername, toInstaMemberUsername);
     }
 }

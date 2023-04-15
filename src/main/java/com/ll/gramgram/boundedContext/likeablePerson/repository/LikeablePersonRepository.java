@@ -7,8 +7,14 @@ import java.util.List;
 import java.util.Optional;
 
 // Integer -> Long 수정
-public interface LikeablePersonRepository extends JpaRepository<LikeablePerson, Long> {
+public interface LikeablePersonRepository extends JpaRepository<LikeablePerson, Long>, LikeablePersonRepositoryCustom {
     List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId);
 
     Optional<LikeablePerson> findById(Long fromInstaMemberId);
+
+    List<LikeablePerson> findByToInstaMember_username(String username);
+
+    LikeablePerson findByFromInstaMemberIdAndToInstaMember_username(long fromInstaMemberId, String username);
+
+    Optional<LikeablePerson> findByFromInstaMember_usernameAndToInstaMember_username(String fromInstaMemberUsername, String toInstaMemberUsername);
 }

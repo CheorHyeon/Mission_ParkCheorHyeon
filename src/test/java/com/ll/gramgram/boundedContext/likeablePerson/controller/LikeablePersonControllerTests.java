@@ -224,14 +224,98 @@ public class LikeablePersonControllerTests {
     }
 
     @Test
-    @DisplayName("중복 호감 표시(사유 동일)")
-    @WithUserDetails("user3")
+    @DisplayName("인스타아이디가 없는 회원은 대해서 호감표시를 할 수 없다.")
+    @WithUserDetails("user1")
     void t009() throws Exception {
         // WHEN
         ResultActions resultActions = mvc
                 .perform(post("/likeablePerson/add")
                         .with(csrf()) // CSRF 키 생성
-                        .param("username", "insta_user100")
+                        .param("username", "insta_user4")
+                        .param("attractiveTypeCode", "1")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("add"))
+                .andExpect(status().is4xxClientError());
+        ;
+    }
+
+    @Test
+    @DisplayName("본인이 본인에게 호감표시하면 안된다.")
+    @WithUserDetails("user3")
+    void t010() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "insta_user3")
+                        .param("attractiveTypeCode", "1")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("add"))
+                .andExpect(status().is4xxClientError());
+        ;
+    }
+
+    @Test
+    @DisplayName("특정인에 대해서 호감표시를 중복으로 시도하면 안된다.")
+    @WithUserDetails("user3")
+    void t011() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "insta_user4")
+                        .param("attractiveTypeCode", "1")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("add"))
+                .andExpect(status().is4xxClientError());
+        ;
+    }
+
+    @Test
+    @DisplayName("한 회원은 호감표시를 할 수 있는 최대 인원이 정해져 있다.")
+    @WithUserDetails("user5")
+    void t012() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "insta_user111")
+                        .param("attractiveTypeCode", "1")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("add"))
+                .andExpect(status().is4xxClientError());
+        ;
+    }
+
+    @Test
+    @DisplayName("기존에 호감을 표시한 유저에게 새로운 사유로 호감을 표시하면 추가가 아니라 수정이 된다.")
+    @WithUserDetails("user3")
+    void t013() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "insta_user4")
                         .param("attractiveTypeCode", "2")
                 )
                 .andDo(print());
@@ -240,61 +324,15 @@ public class LikeablePersonControllerTests {
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
                 .andExpect(handler().methodName("add"))
-                .andExpect(status().is4xxClientError());
-    }
+                .andExpect(status().is3xxRedirection());
+        ;
 
+        Optional<LikeablePerson> opLikeablePerson = likeablePersonService.findByFromInstaMember_usernameAndToInstaMember_username("insta_user3", "insta_user4");
 
-    @Test
-    @DisplayName("중복 호감 표시(사유 변경)")
-    @WithUserDetails("user3")
-    void t010() throws Exception {
-        // WHEN
-        ResultActions resultActions = mvc
-                .perform(post("/likeablePerson/add")
-                        .with(csrf()) // CSRF 키 생성
-                        .param("username", "insta_user100")
-                        .param("attractiveTypeCode", "1")
-                )
-                .andDo(print());
+        int newAttractiveTypeCode = opLikeablePerson
+                .map(LikeablePerson::getAttractiveTypeCode)
+                .orElse(-1);
 
-        // THEN
-        resultActions
-                .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("add"))
-                .andExpect(status().is3xxRedirection());  // 목록으로 리다이렉트 검사
-
-        // 변경된 호감 사유 반영 여부 테스트
-        assertThat(likeablePersonService.findById(2L).get().getAttractiveTypeCode()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("호감 표시 10명 이상일 때 호감 표시 사이트 접속 불가 테스트")
-    @WithUserDetails("user3")
-    void t011() throws Exception {
-        ResultActions resultActions = null;
-        // WHEN
-        // 기존 user3의 호감 2명 + 8명 추가 = 최대 사이즈인 10명
-        for(int i=8; i>0; i--) {
-            resultActions = mvc
-                    .perform(post("/likeablePerson/add")
-                            .with(csrf()) // CSRF 키 생성
-                            .param("username", "aaaa" + i)
-                            .param("attractiveTypeCode", "1")
-                    )
-                    .andDo(print());
-        }
-
-        resultActions = mvc
-                .perform(post("/likeablePerson/add")
-                        .with(csrf()) // CSRF 키 생성
-                        .param("username", "aaaa" + 123)
-                        .param("attractiveTypeCode", "1")
-                );
-
-        // THEN, 10명을 넘게 등록하려 시도할 경우 historyback 작동하는지
-        resultActions
-                .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("add"))
-                .andExpect(status().is4xxClientError());
+        assertThat(newAttractiveTypeCode).isEqualTo(2);
     }
 }

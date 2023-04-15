@@ -89,7 +89,7 @@ public class Rq {
         return "redirect:" + urlWithMsg(url, msg);
     }
 
-    private String  urlWithMsg(String url, String msg) {
+    private String urlWithMsg(String url, String msg) {
         // 기존 URL에 혹시 msg 파라미터가 있다면 그것을 지우고 새로 넣는다.
         return Ut.url.modifyQueryParam(url, "msg", msgWithTtl(msg));
     }
