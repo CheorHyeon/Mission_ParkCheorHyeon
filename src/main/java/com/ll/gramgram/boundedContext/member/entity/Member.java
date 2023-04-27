@@ -38,7 +38,7 @@ public class Member extends BaseEntity {
         grantedAuthorities.add(new SimpleGrantedAuthority("member"));
 
         // username이 admin인 회원은 추가로 admin 권한도 가진다.
-        if ("admin".equals(username)) {
+        if (isAdmin()) {
             grantedAuthorities.add(new SimpleGrantedAuthority("admin"));
         }
 
@@ -53,5 +53,9 @@ public class Member extends BaseEntity {
     public String getNickname() {
         // 최소 6자 이상
         return "%1$4s".formatted(Long.toString(getId(), 36)).replace(' ', '0');
+    }
+
+    public boolean isAdmin() {
+        return "admin".equals(username);
     }
 }
