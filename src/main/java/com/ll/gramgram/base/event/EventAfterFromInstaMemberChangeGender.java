@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationEvent;
 public class EventAfterFromInstaMemberChangeGender extends ApplicationEvent {
     private final InstaMember instaMember;
     private final String oldGender;
+
     public EventAfterFromInstaMemberChangeGender(Object source, InstaMember instaMember, String oldGender) {
         super(source);
         this.instaMember = instaMember;

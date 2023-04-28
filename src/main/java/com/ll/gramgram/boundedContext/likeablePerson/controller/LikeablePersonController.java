@@ -30,18 +30,6 @@ public class LikeablePersonController {
         return "usr/likeablePerson/like";
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class LikeForm {
-        @NotBlank
-        @Size(min = 3, max = 30)
-        private final String username;
-        @NotNull
-        @Min(1)
-        @Max(3)
-        private final int attractiveTypeCode;
-    }
-
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/like")
     public String like(@Valid LikeForm likeForm) {
@@ -99,15 +87,6 @@ public class LikeablePersonController {
         return "usr/likeablePerson/modify";
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class ModifyForm {
-        @NotNull
-        @Min(1)
-        @Max(3)
-        private final int attractiveTypeCode;
-    }
-
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/modify/{id}")
     public String modify(@PathVariable Long id, @Valid ModifyForm modifyForm) {
@@ -118,5 +97,34 @@ public class LikeablePersonController {
         }
 
         return rq.redirectWithMsg("/usr/likeablePerson/list", rsData);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/toList")
+    @ResponseBody
+    public String showToList(Model model) {
+        //TODO : showToList 구현해야 함
+        return "usr/likeablePerson/toList 구현해야 함";
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class LikeForm {
+        @NotBlank
+        @Size(min = 3, max = 30)
+        private final String username;
+        @NotNull
+        @Min(1)
+        @Max(3)
+        private final int attractiveTypeCode;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class ModifyForm {
+        @NotNull
+        @Min(1)
+        @Max(3)
+        private final int attractiveTypeCode;
     }
 }

@@ -56,6 +56,7 @@ public class Rq {
         String referer = savedRequest.getRedirectUrl();
         return referer != null && referer.contains("/adm");
     }
+
     // 로그인 되어 있는지 체크
     public boolean isLogin() {
         return user != null;
