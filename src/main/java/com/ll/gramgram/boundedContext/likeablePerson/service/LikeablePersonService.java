@@ -71,6 +71,7 @@ public class LikeablePersonService {
 
     @Transactional
     public RsData cancel(LikeablePerson likeablePerson) {
+
         publisher.publishEvent(new EventBeforeCancelLike(this, likeablePerson));
 
         // 너가 생성한 좋아요가 사라졌어.
@@ -95,6 +96,9 @@ public class LikeablePersonService {
 
         if (actorInstaMemberId != fromInstaMemberId)
             return RsData.of("F-2", "권한이 없습니다.");
+
+        if(!likeablePerson.isModifyUnlocked())
+            return RsData.of("F-9", "호감 표시 또는 사유 변경 후 3시간 이후 취소가 가능합니다.");
 
         return RsData.of("S-1", "삭제가능합니다.");
     }
@@ -127,6 +131,10 @@ public class LikeablePersonService {
         long likeablePersonFromMax = AppConfig.getLikeablePersonFromMax();
 
         if (fromLikeablePerson != null) {
+            // 호감 등록페이지에서 동일한 사람에 대해 호감 표시 할 경우에도 쿨타임 검사(없어도 되지만, 굳이 다른 함수 호출 안하도록)
+            if(!fromLikeablePerson.isModifyUnlocked())
+                return RsData.of("F-9", "%s님에 대한 호감 사유 수정은 등록 후 3시간 이후 가능합니다.".formatted(username));
+
             return RsData.of("S-2", "%s님에 대해서 호감표시가 가능합니다.".formatted(username));
         }
 
@@ -206,10 +214,13 @@ public class LikeablePersonService {
         InstaMember fromInstaMember = actor.getInstaMember();
 
         if (!Objects.equals(likeablePerson.getFromInstaMember().getId(), fromInstaMember.getId())) {
-            return RsData.of("F-2", "해당 호감표시를 취소할 권한이 없습니다.");
+            return RsData.of("F-2", "해당 호감표시를 수정할 권한이 없습니다.");
         }
 
+        if(!likeablePerson.isModifyUnlocked()){
+            return RsData.of("F-8", "호감 표시 후 3시간 이후 호감 사유 수정이 가능합니다.");
+        }
 
-        return RsData.of("S-1", "호감표시취소가 가능합니다.");
+        return RsData.of("S-1", "호감 사유 수정이 가능합니다.");
     }
 }

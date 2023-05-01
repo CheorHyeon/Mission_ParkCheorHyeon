@@ -391,4 +391,36 @@ public class LikeablePersonControllerTests {
 
         assertThat(newAttractiveTypeCode).isEqualTo(2);
     }
+
+    @Test
+    @DisplayName("쿨타임 전 삭제 시도 -> 실패")
+    @WithUserDetails("user3")
+    void t020() throws Exception {
+        // 호감 생성
+        ResultActions resultActions = mvc
+                .perform(post("/usr/likeablePerson/like")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "ch_513")
+                        .param("attractiveTypeCode", "3")
+                )
+                .andDo(print());
+
+        // 삭제 시도
+        ResultActions resultActions2 = mvc
+                .perform(
+                        delete("/usr/likeablePerson/3")
+                                .with(csrf())
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions2
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("cancel"))
+                .andExpect(status().is4xxClientError());
+
+        Optional<LikeablePerson> opLikeablePerson = likeablePersonService.findByFromInstaMember_usernameAndToInstaMember_username("insta_user3", "ch_513");
+
+        assertThat(opLikeablePerson).isPresent();
+    }
 }
