@@ -140,4 +140,45 @@ public class InstaMemberService {
                     saveSnapshot(snapshot);
                 });
     }
+
+    // oauthID : 로그인한 인스타.id 니깐, 인스타 계정마다 하나의 oauthID를 가짐
+    // 카카오로그인, 네이버로그인 등 로그인 여러가지에 인스타 1개, N:1개로 연결해도 가능하게끔
+    // 사용자가 카카오인지, 네이버인지 까먹을수도 있으니
+    public RsData<InstaMember> connect(Member actor, String gender, String oauthId, String username, String accessToken) {
+        Optional<InstaMember> opInstaMember = instaMemberRepository.findByOauthId(oauthId);
+
+        // 스프링 시큐리티로 인스타 ->
+        if (opInstaMember.isPresent()) {
+            InstaMember instaMember = opInstaMember.get();
+            instaMember.setUsername(username);
+            instaMember.setAccessToken(accessToken);
+            instaMember.setGender(gender);
+            instaMemberRepository.save(instaMember);
+
+            actor.setInstaMember(instaMember);
+
+            return RsData.of("S-3", "인스타계정이 연결되었습니다.", instaMember);
+        }
+
+        opInstaMember = findByUsername(username);
+
+        if (opInstaMember.isPresent()) {
+            InstaMember instaMember = opInstaMember.get();
+            instaMember.setOauthId(oauthId);
+            instaMember.setAccessToken(accessToken);
+            instaMember.setGender(gender);
+            instaMemberRepository.save(instaMember);
+
+            actor.setInstaMember(instaMember);
+
+            return RsData.of("S-4", "인스타계정이 연결되었습니다.", instaMember);
+        }
+
+        InstaMember instaMember = connect(actor, username, gender).getData();
+
+        instaMember.setOauthId(oauthId);
+        instaMember.setAccessToken(accessToken);
+
+        return RsData.of("S-5", "인스타계정이 연결되었습니다.", instaMember);
+    }
 }

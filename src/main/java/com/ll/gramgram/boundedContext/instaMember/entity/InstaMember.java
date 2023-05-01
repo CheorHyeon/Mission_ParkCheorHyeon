@@ -2,10 +2,7 @@ package com.ll.gramgram.boundedContext.instaMember.entity;
 
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -19,9 +16,17 @@ import java.util.List;
 @SuperBuilder
 @ToString(callSuper = true)
 public class InstaMember extends InstaMemberBase {
+    @Setter
     @Column(unique = true)
     private String username;
 
+
+    @Setter
+    @Column(unique = true)
+    private String oauthId;
+
+    @Setter
+    private String accessToken;
     @OneToMany(mappedBy = "fromInstaMember", cascade = {CascadeType.ALL})
     @OrderBy("id desc") // 정렬
     @Builder.Default // @Builder 가 있으면 ` = new ArrayList<>();` 가 작동하지 않는다. 그래서 이걸 붙여야 한다.
