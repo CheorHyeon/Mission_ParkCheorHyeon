@@ -299,4 +299,20 @@ public class LikeablePersonServiceTests {
         // 수정 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
         assertThat(likeablePersonToCh513.getAttractiveTypeCode()).isEqualTo(3);
     }
+
+    @Test
+    @DisplayName("호감사유를 등록하고 3시간 이전에 삭제시도 -> 실패")
+    void t011() throws Exception {
+        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
+
+        // 호감표시 생성
+        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
+
+        // 호감 사유 삭제 시도
+        likeablePersonService.cancel(likeablePersonToCh513);
+        LikeablePerson result = likeablePersonRepository.findByToInstaMember_username("ch_513").get(0);
+
+        // 삭제 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
+        assertThat(result).isNotNull();
+    }
 }

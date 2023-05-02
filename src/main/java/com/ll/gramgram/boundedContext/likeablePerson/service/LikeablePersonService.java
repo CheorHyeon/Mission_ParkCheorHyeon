@@ -72,6 +72,9 @@ public class LikeablePersonService {
     @Transactional
     public RsData cancel(LikeablePerson likeablePerson) {
 
+        if(!likeablePerson.isModifyUnlocked())
+            return RsData.of("F-9", "호감 업데이트 이후 3시간이 지나야 삭제가 가능합니다.");
+
         publisher.publishEvent(new EventBeforeCancelLike(this, likeablePerson));
 
         // 너가 생성한 좋아요가 사라졌어.
