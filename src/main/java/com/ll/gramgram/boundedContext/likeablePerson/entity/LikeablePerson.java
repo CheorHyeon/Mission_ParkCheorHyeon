@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,7 +42,19 @@ public class LikeablePerson extends BaseEntity {
     // 초 단위에서 올림 해주세요.
     // TODO : 남은 시간 return하는 메서드 구현필요
     public String getModifyUnlockDateRemainStrHuman() {
-        return "2시간 16분";
+        Duration remainingSeconds = Duration.between(LocalDateTime.now(), modifyUnlockDate);
+        int hoursLeft = (int) remainingSeconds.toHours();
+        int minsLeft = (int) remainingSeconds.toMinutes() % 60;
+
+        if(minsLeft%60 !=0) {
+            minsLeft++;
+        }
+
+        if(minsLeft ==60) {
+            hoursLeft++;
+            minsLeft--;
+        }
+        return "%d시간 %d분".formatted(hoursLeft, minsLeft);
     }
 
     public RsData updateAttractionTypeCode(int attractiveTypeCode) {
