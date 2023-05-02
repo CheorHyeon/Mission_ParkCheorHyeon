@@ -46,13 +46,12 @@ public class LikeablePerson extends BaseEntity {
         int hoursLeft = (int) remainingSeconds.toHours();
         int minsLeft = (int) remainingSeconds.toMinutes() % 60;
 
-        if(minsLeft%60 !=0) {
+        if (remainingSeconds.getSeconds() % 60 > 0) {
             minsLeft++;
-        }
-
-        if(minsLeft ==60) {
-            hoursLeft++;
-            minsLeft--;
+            if(minsLeft == 60) {
+                hoursLeft++;
+                minsLeft = 0;
+            }
         }
         return "%d시간 %d분".formatted(hoursLeft, minsLeft);
     }
