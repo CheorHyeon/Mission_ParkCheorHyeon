@@ -206,6 +206,7 @@ public class LikeablePersonService {
 
         if (rsData.isSuccess()) {
             publisher.publishEvent(new EventAfterModifyAttractiveType(this, likeablePerson, oldAttractiveTypeCode, attractiveTypeCode));
+
         }
     }
 
