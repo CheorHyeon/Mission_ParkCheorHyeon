@@ -40,6 +40,7 @@ public class NotificationService {
                 .toInstaMember(likeablePerson.getToInstaMember())
                 .fromInstaMember(likeablePerson.getFromInstaMember())
                 .typeCode("Like")
+                .newAttractiveTypeCode(likeablePerson.getAttractiveTypeCode())
                 .build();
 
         notificationRepository.save(likeMsgNotification);

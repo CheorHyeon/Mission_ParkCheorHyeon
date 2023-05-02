@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,5 +34,45 @@ public class Notification extends BaseEntity {
     private String newGender; //  해당사항 없으면 null
     private int newAttractiveTypeCode; // 해당사항 없으면 null
 
+    public String getCreateDateStrHuman() {
+        Duration betweenTime = Duration.between(getCreateDate(), LocalDateTime.now());
+        int hoursLeft = (int) betweenTime.toHours();
+        int minsLeft = (int) betweenTime.toMinutes() % 60;
+
+        if (hoursLeft == 0) {
+            return "%d분전".formatted(minsLeft);
+        }
+
+        return "%d시간 %d분전".formatted(hoursLeft, minsLeft);
+    }
+
+    public Boolean isNonModify(){
+        return typeCode.equals("Like");
+    }
+
+    public Boolean isModify(){
+        return typeCode.equals("ModifyAttractiveType");
+    }
+    public String getGenderDisplayName() {
+        return switch (fromInstaMember.getGender()) {
+            case "W" -> "여자";
+            default -> "남자";
+        };
+    }
+
+    public String getNewAttractiveTypeCode() {
+        return switch (newAttractiveTypeCode) {
+            case 1 -> "외모";
+            case 2 -> "성격";
+            default -> "능력";
+        };
+    }
+    public String getOldAttractiveTypeCode() {
+        return switch (oldAttractiveTypeCode) {
+            case 1 -> "외모";
+            case 2 -> "성격";
+            default -> "능력";
+        };
+    }
 
 }
