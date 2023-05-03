@@ -35,6 +35,7 @@ public class NotificationController {
 
         model.addAttribute("notifications", notifications);
 
+        // 벨 모양을 누르면 GetMapping이 되니깐 이벤트 발생시키기
         publisher.publishEvent(new EventClickNotification(this, notifications));
 
         return "usr/notification/list";

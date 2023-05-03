@@ -40,12 +40,13 @@ public class LikeablePerson extends BaseEntity {
     }
 
     // 초 단위에서 올림 해주세요.
-    // TODO : 남은 시간 return하는 메서드 구현필요
+    // 남은 시간 Return 구현함
     public String getModifyUnlockDateRemainStrHuman() {
         Duration remainingSeconds = Duration.between(LocalDateTime.now(), modifyUnlockDate);
         int hoursLeft = (int) remainingSeconds.toHours();
         int minsLeft = (int) remainingSeconds.toMinutes() % 60;
 
+        // 초단위 올림 -> 처음에 59분 00초 -> 60분 변경 시 00분으로 하고 시간 1시간 올리기
         if (remainingSeconds.getSeconds() % 60 > 0) {
             minsLeft++;
             if(minsLeft == 60) {

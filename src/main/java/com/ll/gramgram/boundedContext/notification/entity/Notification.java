@@ -34,6 +34,7 @@ public class Notification extends BaseEntity {
     private String newGender; //  해당사항 없으면 null
     private int newAttractiveTypeCode; // 해당사항 없으면 null
 
+    // 몇분전에 발생한지 표시하는 메서드 구현
     public String getCreateDateStrHuman() {
         Duration betweenTime = Duration.between(getCreateDate(), LocalDateTime.now());
         int hoursLeft = (int) betweenTime.toHours();
@@ -53,6 +54,8 @@ public class Notification extends BaseEntity {
     public Boolean isModify(){
         return typeCode.equals("ModifyAttractiveType");
     }
+
+    // 여자/남자 형식이므로 젠더값에 따라 표기 리턴값
     public String getGenderDisplayName() {
         return switch (fromInstaMember.getGender()) {
             case "W" -> "여자";
