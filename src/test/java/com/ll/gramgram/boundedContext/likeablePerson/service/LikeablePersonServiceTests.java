@@ -315,4 +315,6 @@ public class LikeablePersonServiceTests {
         // 삭제 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
         assertThat(result).isNotNull();
     }
+
+
 }

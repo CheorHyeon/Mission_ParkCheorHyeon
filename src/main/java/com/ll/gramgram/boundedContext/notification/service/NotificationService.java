@@ -52,4 +52,8 @@ public class NotificationService {
             notificationRepository.save(notification);
         }
     }
+
+    public Notification findById(Long id) {
+        return notificationRepository.findById(id).get();
+    }
 }
