@@ -2,13 +2,13 @@ package com.ll.gramgram.boundedContext.notification.service;
 
 
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
-import com.ll.gramgram.boundedContext.instaMember.entity.InstaMemberSnapshot;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.notification.entity.Notification;
 import com.ll.gramgram.boundedContext.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -44,5 +44,12 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(likeMsgNotification);
+    }
+
+    public void whenClickNotification(List<Notification> notifications) {
+        for (Notification notification : notifications) {
+            notification.updateReadDate(LocalDateTime.now());
+            notificationRepository.save(notification);
+        }
     }
 }

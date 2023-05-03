@@ -75,4 +75,8 @@ public class Notification extends BaseEntity {
         };
     }
 
+    // 알람 읽었을때 수정 메서드
+    public void updateReadDate(LocalDateTime readDate) {
+        this.readDate = readDate;
+    }
 }

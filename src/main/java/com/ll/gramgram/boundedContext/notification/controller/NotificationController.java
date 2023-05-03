@@ -1,9 +1,12 @@
 package com.ll.gramgram.boundedContext.notification.controller;
 
+import com.ll.gramgram.base.event.EventAfterModifyAttractiveType;
+import com.ll.gramgram.base.event.EventClickNotification;
 import com.ll.gramgram.base.rq.Rq;
 import com.ll.gramgram.boundedContext.notification.entity.Notification;
 import com.ll.gramgram.boundedContext.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +19,7 @@ import java.util.List;
 @RequestMapping("/usr/notification")
 @RequiredArgsConstructor
 public class NotificationController {
+    private final ApplicationEventPublisher publisher;
 
     private final Rq rq;
     private final NotificationService notificationService;
@@ -30,6 +34,8 @@ public class NotificationController {
         List<Notification> notifications = notificationService.findByToInstaMember(rq.getMember().getInstaMember());
 
         model.addAttribute("notifications", notifications);
+
+        publisher.publishEvent(new EventClickNotification(this, notifications));
 
         return "usr/notification/list";
     }

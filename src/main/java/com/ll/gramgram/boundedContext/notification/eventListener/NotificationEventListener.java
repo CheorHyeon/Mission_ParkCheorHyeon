@@ -1,9 +1,6 @@
 package com.ll.gramgram.boundedContext.notification.eventListener;
 
-import com.ll.gramgram.base.event.EventAfterFromInstaMemberChangeGender;
-import com.ll.gramgram.base.event.EventAfterLike;
-import com.ll.gramgram.base.event.EventAfterModifyAttractiveType;
-import com.ll.gramgram.base.event.EventBeforeCancelLike;
+import com.ll.gramgram.base.event.*;
 import com.ll.gramgram.boundedContext.instaMember.service.InstaMemberService;
 import com.ll.gramgram.boundedContext.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +20,15 @@ public class NotificationEventListener {
     }
 
     @EventListener
+    @Transactional
     public void listen(EventAfterLike event) {
         notificationService.whenAfterLike(event.getLikeablePerson());
+    }
+
+    @EventListener
+    @Transactional
+    public void listen(EventClickNotification event) {
+        notificationService.whenClickNotification(event.getNotifications());
     }
 
 }
