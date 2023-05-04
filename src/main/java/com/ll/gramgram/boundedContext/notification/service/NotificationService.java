@@ -19,6 +19,7 @@ public class NotificationService {
     public List<Notification> findByToInstaMember(InstaMember toInstaMember) {
         return notificationRepository.findByToInstaMember(toInstaMember);
     }
+
     // 호감 사유 수정 시 알림 객체 생성 메서드
     public void whenAfterModifyAttractiveType(LikeablePerson likeablePerson, int oldAttractiveTypeCode) {
         Notification modifyMsgNotification = Notification
@@ -32,6 +33,7 @@ public class NotificationService {
 
         notificationRepository.save(modifyMsgNotification);
     }
+
     // 호감 표시 알림 객체 생성 메서드
     public void whenAfterLike(LikeablePerson likeablePerson) {
 
@@ -45,13 +47,18 @@ public class NotificationService {
 
         notificationRepository.save(likeMsgNotification);
     }
+
     // 알림 클릭 시 readDate 업데이트 메서드
     public void whenClickNotification(List<Notification> notifications) {
         for (Notification notification : notifications) {
-            notification.updateReadDate(LocalDateTime.now());
-            notificationRepository.save(notification);
+            // 조건 추가 (알람을 안읽었으면 수정하는 것, 과제 풀이 시 놓침)
+            if (notification.getReadDate() == null) {
+                notification.updateReadDate(LocalDateTime.now());
+                notificationRepository.save(notification);
+            }
         }
     }
+
     // 테스트 사용 목적 메서드
     public Notification findById(Long id) {
         return notificationRepository.findById(id).get();
