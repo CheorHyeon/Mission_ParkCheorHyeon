@@ -3,7 +3,9 @@ package com.ll.gramgram.boundedContext.likeablePerson.service;
 
 import com.ll.gramgram.TestUt;
 import com.ll.gramgram.base.appConfig.AppConfig;
+import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
+import com.ll.gramgram.boundedContext.likeablePerson.controller.LikeablePersonController;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
 import com.ll.gramgram.boundedContext.member.entity.Member;
@@ -21,6 +23,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @Transactional
@@ -259,4 +263,58 @@ public class LikeablePersonServiceTests {
         assertThat(likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)).isTrue();
 
     }
+
+    @Test
+    @DisplayName("호감사유를 등록하고 3시간 이전에 수정시도 -> 실패")
+    void t009() throws Exception {
+        //현재시점 기준에서 쿨타임이 다 차는 시간을 구한다(미래)
+        LocalDateTime coolTime = AppConfig.genLikeablePersonModifyCoolTime();
+
+        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
+
+        // 호감표시 생성
+        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
+
+        // 호감 사유 수정 시도
+       likeablePersonService.modifyAttractive(memberUser3, likeablePersonToCh513, 1).getData();
+
+        // 수정 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
+        assertThat(likeablePersonToCh513.getAttractiveTypeCode()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("호감사유를 등록하고 3시간 이전에 삭제시도 -> 실패")
+    void t010() throws Exception {
+        //현재시점 기준에서 쿨타임이 다 차는 시간을 구한다(미래)
+        LocalDateTime coolTime = AppConfig.genLikeablePersonModifyCoolTime();
+
+        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
+
+        // 호감표시 생성
+        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
+
+        // 호감 사유 수정 시도
+        likeablePersonService.cancel(likeablePersonToCh513).getData();
+
+        // 수정 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
+        assertThat(likeablePersonToCh513.getAttractiveTypeCode()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("호감사유를 등록하고 3시간 이전에 삭제시도 -> 실패")
+    void t011() throws Exception {
+        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
+
+        // 호감표시 생성
+        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
+
+        // 호감 사유 삭제 시도
+        likeablePersonService.cancel(likeablePersonToCh513);
+        LikeablePerson result = likeablePersonRepository.findByToInstaMember_username("ch_513").get(0);
+
+        // 삭제 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
+        assertThat(result).isNotNull();
+    }
+
+
 }

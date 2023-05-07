@@ -71,6 +71,10 @@ public class LikeablePersonService {
 
     @Transactional
     public RsData cancel(LikeablePerson likeablePerson) {
+
+        if(!likeablePerson.isModifyUnlocked())
+            return RsData.of("F-9", "호감 업데이트 이후 3시간이 지나야 삭제가 가능합니다.");
+
         publisher.publishEvent(new EventBeforeCancelLike(this, likeablePerson));
 
         // 너가 생성한 좋아요가 사라졌어.
@@ -86,7 +90,7 @@ public class LikeablePersonService {
     }
 
     public RsData canCancel(Member actor, LikeablePerson likeablePerson) {
-        if (likeablePerson == null) return RsData.of("F-1", "이미 삭제되었습니다.");
+        if (likeablePerson == null) return RsData.of("F-1", "이미 취소되었습니다.");
 
         // 수행자의 인스타계정 번호
         long actorInstaMemberId = actor.getInstaMember().getId();
@@ -94,9 +98,12 @@ public class LikeablePersonService {
         long fromInstaMemberId = likeablePerson.getFromInstaMember().getId();
 
         if (actorInstaMemberId != fromInstaMemberId)
-            return RsData.of("F-2", "권한이 없습니다.");
+            return RsData.of("F-2", "취소할 권한이 없습니다.");
 
-        return RsData.of("S-1", "삭제가능합니다.");
+        if(!likeablePerson.isModifyUnlocked())
+            return RsData.of("F-3", "아직 취소할 수 없습니다. %s 이후에 취소가 가능합니다.".formatted(likeablePerson.getModifyUnlockDateRemainStrHuman()));
+
+        return RsData.of("S-1", "취소가 가능합니다.");
     }
 
     private RsData canLike(Member actor, String username, int attractiveTypeCode) {
@@ -127,6 +134,10 @@ public class LikeablePersonService {
         long likeablePersonFromMax = AppConfig.getLikeablePersonFromMax();
 
         if (fromLikeablePerson != null) {
+            // 호감 등록페이지에서 동일한 사람에 대해 호감 표시 할 경우에도 쿨타임 검사(없어도 되지만, 굳이 다른 함수 호출 안하도록)
+            if(!fromLikeablePerson.isModifyUnlocked())
+                return RsData.of("F-9", "%s님에 대한 호감 사유 수정은 등록 후 3시간 이후 가능합니다.".formatted(username));
+
             return RsData.of("S-2", "%s님에 대해서 호감표시가 가능합니다.".formatted(username));
         }
 
@@ -156,7 +167,7 @@ public class LikeablePersonService {
 
     @Transactional
     public RsData<LikeablePerson> modifyAttractive(Member actor, LikeablePerson likeablePerson, int attractiveTypeCode) {
-        RsData canModifyRsData = canModifyLike(actor, likeablePerson);
+        RsData canModifyRsData = canModify(actor, likeablePerson);
 
         if (canModifyRsData.isFail()) {
             return canModifyRsData;
@@ -172,7 +183,8 @@ public class LikeablePersonService {
         return RsData.of("S-3", "%s님에 대한 호감사유를 %s에서 %s(으)로 변경합니다.".formatted(username, oldAttractiveTypeDisplayName, newAttractiveTypeDisplayName), likeablePerson);
     }
 
-    private RsData<LikeablePerson> modifyAttractive(Member actor, String username, int attractiveTypeCode) {
+    @Transactional
+    public RsData<LikeablePerson> modifyAttractive(Member actor, String username, int attractiveTypeCode) {
         // 액터가 생성한 `좋아요` 들 가져오기
         List<LikeablePerson> fromLikeablePeople = actor.getInstaMember().getFromLikeablePeople();
 
@@ -195,10 +207,11 @@ public class LikeablePersonService {
 
         if (rsData.isSuccess()) {
             publisher.publishEvent(new EventAfterModifyAttractiveType(this, likeablePerson, oldAttractiveTypeCode, attractiveTypeCode));
+
         }
     }
 
-    public RsData canModifyLike(Member actor, LikeablePerson likeablePerson) {
+    public RsData canModify(Member actor, LikeablePerson likeablePerson) {
         if (!actor.hasConnectedInstaMember()) {
             return RsData.of("F-1", "먼저 본인의 인스타그램 아이디를 입력해주세요.");
         }
@@ -206,10 +219,13 @@ public class LikeablePersonService {
         InstaMember fromInstaMember = actor.getInstaMember();
 
         if (!Objects.equals(likeablePerson.getFromInstaMember().getId(), fromInstaMember.getId())) {
-            return RsData.of("F-2", "해당 호감표시를 취소할 권한이 없습니다.");
+            return RsData.of("F-2", "해당 호감표시에 대해 사유변경을 수행할 권한이 없습니다.");
         }
 
+        if(!likeablePerson.isModifyUnlocked()){
+            return RsData.of("F-3", "아직 호감사유변경을 할 수 없습니다. %s 후에는 가능합니다.".formatted(likeablePerson.getModifyUnlockDateRemainStrHuman()));
+        }
 
-        return RsData.of("S-1", "호감표시취소가 가능합니다.");
+        return RsData.of("S-1", "호감사유변경이 가능합니다.");
     }
 }
