@@ -3,6 +3,7 @@ package com.ll.gramgram.base.rq;
 import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.member.entity.Member;
 import com.ll.gramgram.boundedContext.member.service.MemberService;
+import com.ll.gramgram.boundedContext.notification.service.NotificationService;
 import com.ll.gramgram.standard.util.Ut;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,11 +27,14 @@ public class Rq {
     private final User user;
     private Member member = null; // 레이지 로딩, 처음부터 넣지 않고, 요청이 들어올 때 넣는다.
 
-    public Rq(MemberService memberService, HttpServletRequest req, HttpServletResponse resp, HttpSession session) {
+    private final NotificationService notificationService;
+
+    public Rq(MemberService memberService, HttpServletRequest req, HttpServletResponse resp, HttpSession session, NotificationService notificationService) {
         this.memberService = memberService;
         this.req = req;
         this.resp = resp;
         this.session = session;
+        this.notificationService = notificationService;
 
         // 현재 로그인한 회원의 인증정보를 가져옴
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -130,5 +134,15 @@ public class Rq {
 
     public void removeSessionAttr(String name) {
         session.removeAttribute(name);
+    }
+
+    public boolean hasUnreadNotifications() {
+        if (isLogout()) return false;
+
+        Member actor = getMember();
+
+        if (!actor.hasConnectedInstaMember()) return false;
+
+        return notificationService.countUnreadNotificationsByToInstaMember(getMember().getInstaMember());
     }
 }
