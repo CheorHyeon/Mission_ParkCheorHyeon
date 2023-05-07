@@ -393,6 +393,28 @@ public class LikeablePersonControllerTests {
     }
 
     @Test
+    @DisplayName("호감취소는 쿨타임이 지나야 가능하다.")
+    @WithUserDetails("user3")
+    void t016() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/usr/likeablePerson/3")
+                                .with(csrf())
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("cancel"))
+                .andExpect(status().is4xxClientError())
+        ;
+
+        assertThat(likeablePersonService.findById(3L).isPresent()).isEqualTo(true);
+    }
+
+    @Test
     @DisplayName("쿨타임 전 삭제 시도 -> 실패")
     @WithUserDetails("user3")
     void t020() throws Exception {
