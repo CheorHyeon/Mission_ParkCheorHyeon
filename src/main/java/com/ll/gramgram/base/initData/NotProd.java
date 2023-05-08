@@ -50,6 +50,11 @@ public class NotProd {
                 LikeablePerson likeablePersonToinstaUser100 = likeablePersonService.like(memberUser3, "insta_user100", 2).getData();
                 Ut.reflection.setFieldValue(likeablePersonToinstaUser100, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
 
+                LikeablePerson likeablePersonToinstaUser4_2 = likeablePersonService.like(memberUser2, "insta_user4", 1).getData();
+                Ut.reflection.setFieldValue(likeablePersonToinstaUser4_2, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
+                LikeablePerson likeablePersonToinstaUser4_3 = likeablePersonService.like(memberUser5, "insta_user4", 2).getData();
+                Ut.reflection.setFieldValue(likeablePersonToinstaUser4_3, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
+
                 // 쿨타임 테스트용
                 LikeablePerson likeablePersonToInstaUserAbcd = likeablePersonService.like(memberUser3, "insta_user_abcd", 2).getData();
             }
