@@ -115,10 +115,10 @@ public class LikeablePersonController {
                 gender = gender.trim();
             // 호감 정보 가져오기
             List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember(instaMember);
-            // 호감 표시한 사람의 성별로 정렬
-            likeablePeople = sortByGender(likeablePeople, gender);
-            // 호감 사유별 정렬
-            likeablePeople = sortByAttractiveTypeCode(likeablePeople, attractiveTypeCode);
+            // 호감 표시한 사람의 성별로 필터링
+            likeablePeople = filterByGender(likeablePeople, gender);
+            // 호감 사유별 필터링
+            likeablePeople = filterByAttractiveTypeCode(likeablePeople, attractiveTypeCode);
             // 정렬 코드별 정렬
             likeablePeople = sortBySortCode(likeablePeople, sortCode);
 
@@ -143,12 +143,14 @@ public class LikeablePersonController {
             // 인기 적은순
             case 4 -> {
                 likeablePeople = likeablePeople.stream()
+                        // (a, b)로 했으나 변경
                         .sorted(Comparator.comparingInt(a -> a.getFromInstaMember().getToLikeablePeople().size()))
                         .collect(Collectors.toList());
             }
             // 성별순
             case 5 -> {
                 likeablePeople = likeablePeople.stream()
+                        // 알파벳 "M", "W" 순이니 역순으로 해야 여성부터
                         .sorted(Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender()).reversed()
                                 .thenComparing(Comparator.comparing(LikeablePerson::getCreateDate).reversed()))
                         .collect(Collectors.toList());
@@ -170,7 +172,7 @@ public class LikeablePersonController {
         return likeablePeople;
     }
 
-    private List<LikeablePerson> sortByAttractiveTypeCode(List<LikeablePerson> likeablePeople, int attractiveTypeCode) {
+    private List<LikeablePerson> filterByAttractiveTypeCode(List<LikeablePerson> likeablePeople, int attractiveTypeCode) {
         // 0인 경우는 "전체"를 갖도록 수정하였기에, 0인경우는 그대로 반환
         if (attractiveTypeCode == 0)
             return likeablePeople;
@@ -181,7 +183,7 @@ public class LikeablePersonController {
                 .collect(Collectors.toList());
     }
 
-    private List<LikeablePerson> sortByGender(List<LikeablePerson> likeablePeople, String gender) {
+    private List<LikeablePerson> filterByGender(List<LikeablePerson> likeablePeople, String gender) {
 
         // 값이 없는경우는 전체를 뜻함으로 정렬 미시행
         if (gender.equals(""))
