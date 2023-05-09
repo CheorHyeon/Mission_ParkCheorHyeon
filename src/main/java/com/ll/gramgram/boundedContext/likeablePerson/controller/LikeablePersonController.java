@@ -114,8 +114,8 @@ public class LikeablePersonController {
             List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember(instaMember);
             // 호감 표시한 사람의 성별로 정렬
             likeablePeople = sortByGender(likeablePeople, gender);
-//            // 호감 사유별 정렬
-//            likeablePeople = sortByAttractiveTypeCode(likeablePeople,attractiveTypeCode);
+            // 호감 사유별 정렬
+            likeablePeople = sortByAttractiveTypeCode(likeablePeople,attractiveTypeCode);
 //            // 정렬 코드별 정렬
 //            likeablePeople = sortBySortCode(likeablePeople, sortCode);
 
@@ -125,13 +125,24 @@ public class LikeablePersonController {
         return "usr/likeablePerson/toList";
     }
 
+    private List<LikeablePerson> sortByAttractiveTypeCode(List<LikeablePerson> likeablePeople, int attractiveTypeCode) {
+        // 0인 경우는 "전체"를 갖도록 수정하였기에, 0인경우는 그대로 반환
+        if (attractiveTypeCode==0)
+            return likeablePeople;
+
+        // 값이 있는 경우는 호감 사유별 필터링
+        return likeablePeople.stream()
+                .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode()==attractiveTypeCode)
+                .collect(Collectors.toList());
+    }
+
     private List<LikeablePerson> sortByGender(List<LikeablePerson> likeablePeople, String gender) {
 
         // 값이 없는경우는 전체를 뜻함으로 정렬 미시행
         if (gender.equals(""))
             return likeablePeople;
 
-        // 값이 있는 경우는 성별 정렬, 호감 표시자(from)의 성별 검사하여 리스트화
+        // 값이 있는 경우는 성별 필터링, 호감 표시자(from)의 성별 검사하여 리스트화
         return likeablePeople.stream()
                 .filter(likeablePerson -> likeablePerson.getFromInstaMember().getGender().equals(gender))
                 .collect(Collectors.toList());
