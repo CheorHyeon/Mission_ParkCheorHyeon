@@ -102,23 +102,39 @@ public class LikeablePersonController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/toList")
-    public String showToList(Model model, @RequestParam(defaultValue = "M") String gender, @RequestParam(defaultValue = "0") int attractiveTypeCode, @RequestParam(defaultValue = "1") int sortCode) {
+    public String showToList(Model model, @RequestParam(defaultValue = "") String gender, @RequestParam(defaultValue = "0") int attractiveTypeCode, @RequestParam(defaultValue = "1") int sortCode) {
         InstaMember instaMember = rq.getMember().getInstaMember();
 
         // 인스타인증을 했는지 체크
         if (instaMember != null) {
-            // 성별별 호감 찾기
+            // 혹시 모를 공백 제거(기본값이라면 오류남)
+            if (!gender.equals(""))
+                gender = gender.trim();
+            // 호감 정보 가져오기
             List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember(instaMember);
-
-
-            likeablePeople = likeablePeople.stream()
-                    .filter(likeablePerson -> likeablePerson.getFromInstaMember().getGender().equals(gender))
-                    .collect(Collectors.toList());
+            // 호감 표시한 사람의 성별로 정렬
+            likeablePeople = sortByGender(likeablePeople, gender);
+//            // 호감 사유별 정렬
+//            likeablePeople = sortByAttractiveTypeCode(likeablePeople,attractiveTypeCode);
+//            // 정렬 코드별 정렬
+//            likeablePeople = sortBySortCode(likeablePeople, sortCode);
 
             model.addAttribute("likeablePeople", likeablePeople);
         }
 
         return "usr/likeablePerson/toList";
+    }
+
+    private List<LikeablePerson> sortByGender(List<LikeablePerson> likeablePeople, String gender) {
+
+        // 값이 없는경우는 전체를 뜻함으로 정렬 미시행
+        if (gender.equals(""))
+            return likeablePeople;
+
+        // 값이 있는 경우는 성별 정렬, 호감 표시자(from)의 성별 검사하여 리스트화
+        return likeablePeople.stream()
+                .filter(likeablePerson -> likeablePerson.getFromInstaMember().getGender().equals(gender))
+                .collect(Collectors.toList());
     }
 
     @AllArgsConstructor
