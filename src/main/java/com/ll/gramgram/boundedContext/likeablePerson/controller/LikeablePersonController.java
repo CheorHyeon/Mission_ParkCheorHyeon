@@ -15,8 +15,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparing;
 
 @Controller
 @RequestMapping("/usr/likeablePerson")
@@ -115,9 +118,9 @@ public class LikeablePersonController {
             // 호감 표시한 사람의 성별로 정렬
             likeablePeople = sortByGender(likeablePeople, gender);
             // 호감 사유별 정렬
-            likeablePeople = sortByAttractiveTypeCode(likeablePeople,attractiveTypeCode);
-//            // 정렬 코드별 정렬
-//            likeablePeople = sortBySortCode(likeablePeople, sortCode);
+            likeablePeople = sortByAttractiveTypeCode(likeablePeople, attractiveTypeCode);
+            // 정렬 코드별 정렬
+            likeablePeople = sortBySortCode(likeablePeople, sortCode);
 
             model.addAttribute("likeablePeople", likeablePeople);
         }
@@ -125,14 +128,56 @@ public class LikeablePersonController {
         return "usr/likeablePerson/toList";
     }
 
+    private List<LikeablePerson> sortBySortCode(List<LikeablePerson> likeablePeople, int sortCode) {
+        switch (sortCode) {
+            // 오래된 순이니 그대로 리턴
+            case 2 -> {
+                return likeablePeople;
+            }
+            // 인기 많은 순
+            case 3 -> {
+                likeablePeople = likeablePeople.stream()
+                        .sorted((a, b) -> b.getFromInstaMember().getToLikeablePeople().size() - a.getFromInstaMember().getToLikeablePeople().size())
+                        .collect(Collectors.toList());
+            }
+            // 인기 적은순
+            case 4 -> {
+                likeablePeople = likeablePeople.stream()
+                        .sorted(Comparator.comparingInt(a -> a.getFromInstaMember().getToLikeablePeople().size()))
+                        .collect(Collectors.toList());
+            }
+            // 성별순
+            case 5 -> {
+                likeablePeople = likeablePeople.stream()
+                        .sorted(Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender()).reversed()
+                                .thenComparing(Comparator.comparing(LikeablePerson::getCreateDate).reversed()))
+                        .collect(Collectors.toList());
+            }
+            // 호감사유 순
+            case 6 -> {
+                likeablePeople = likeablePeople.stream()
+                        .sorted(Comparator.comparing(LikeablePerson::getAttractiveTypeCode)
+                                .thenComparing(Comparator.comparing(LikeablePerson::getCreateDate).reversed()))
+                        .collect(Collectors.toList());
+            }
+            // 기본은 최신순 1번
+            default -> likeablePeople = likeablePeople
+                    .stream()
+                    .sorted(comparing(LikeablePerson::getCreateDate).reversed())
+                    .collect(Collectors.toList());
+        }
+
+        return likeablePeople;
+    }
+
     private List<LikeablePerson> sortByAttractiveTypeCode(List<LikeablePerson> likeablePeople, int attractiveTypeCode) {
         // 0인 경우는 "전체"를 갖도록 수정하였기에, 0인경우는 그대로 반환
-        if (attractiveTypeCode==0)
+        if (attractiveTypeCode == 0)
             return likeablePeople;
 
         // 값이 있는 경우는 호감 사유별 필터링
         return likeablePeople.stream()
-                .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode()==attractiveTypeCode)
+                .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode() == attractiveTypeCode)
                 .collect(Collectors.toList());
     }
 
