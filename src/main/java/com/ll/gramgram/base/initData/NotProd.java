@@ -33,6 +33,7 @@ public class NotProd {
                 Member memberUser3 = memberService.join("user3", "1234").getData();
                 Member memberUser4 = memberService.join("user4", "1234").getData();
                 Member memberUser5 = memberService.join("user5", "1234").getData();
+                Member memberUser8 = memberService.join("user8", "1234").getData();
 
                 Member memberUser6ByKakao = memberService.whenSocialLogin("KAKAO", "KAKAO__2731659195").getData();
                 Member memberUser7ByGoogle = memberService.whenSocialLogin("GOOGLE", "GOOGLE__116304245007543902962").getData();
@@ -58,7 +59,7 @@ public class NotProd {
 
                 // user2에 3명
                 LikeablePerson likeablePersonToinstaUser2_1 = likeablePersonService.like(memberUser3, "insta_user2", 1).getData();
-                Ut.reflection.setFieldValue(likeablePersonToinstaUser2_1, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
+
                 LikeablePerson likeablePersonToinstaUser2_2 = likeablePersonService.like(memberUser1, "insta_user2", 2).getData();
                 Ut.reflection.setFieldValue(likeablePersonToinstaUser2_2, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
                 LikeablePerson likeablePersonToinstaUser2_3 = likeablePersonService.like(memberUser4, "insta_user2", 3).getData();

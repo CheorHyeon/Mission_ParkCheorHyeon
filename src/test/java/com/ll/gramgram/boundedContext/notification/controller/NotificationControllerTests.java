@@ -45,8 +45,8 @@ public class NotificationControllerTests {
                 .stream()
                 .filter(notification -> !notification.isRead())
                 .count();
-
-        assertThat(unreadCount).isEqualTo(1);
+        // 호감 3개로 늘림(4주차 미션하면서 NotProd변경)
+        assertThat(unreadCount).isEqualTo(3L);
 
         // WHEN
         ResultActions resultActions = mvc
