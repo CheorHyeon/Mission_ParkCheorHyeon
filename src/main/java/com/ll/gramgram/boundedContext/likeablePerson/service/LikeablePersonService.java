@@ -15,9 +15,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.Comparator.comparing;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +77,7 @@ public class LikeablePersonService {
     @Transactional
     public RsData cancel(LikeablePerson likeablePerson) {
 
-        if(!likeablePerson.isModifyUnlocked())
+        if (!likeablePerson.isModifyUnlocked())
             return RsData.of("F-9", "호감 업데이트 이후 3시간이 지나야 삭제가 가능합니다.");
 
         publisher.publishEvent(new EventBeforeCancelLike(this, likeablePerson));
@@ -100,7 +105,7 @@ public class LikeablePersonService {
         if (actorInstaMemberId != fromInstaMemberId)
             return RsData.of("F-2", "취소할 권한이 없습니다.");
 
-        if(!likeablePerson.isModifyUnlocked())
+        if (!likeablePerson.isModifyUnlocked())
             return RsData.of("F-3", "아직 취소할 수 없습니다. %s 이후에 취소가 가능합니다.".formatted(likeablePerson.getModifyUnlockDateRemainStrHuman()));
 
         return RsData.of("S-1", "취소가 가능합니다.");
@@ -135,7 +140,7 @@ public class LikeablePersonService {
 
         if (fromLikeablePerson != null) {
             // 호감 등록페이지에서 동일한 사람에 대해 호감 표시 할 경우에도 쿨타임 검사(없어도 되지만, 굳이 다른 함수 호출 안하도록)
-            if(!fromLikeablePerson.isModifyUnlocked())
+            if (!fromLikeablePerson.isModifyUnlocked())
                 return RsData.of("F-9", "%s님에 대한 호감 사유 수정은 등록 후 3시간 이후 가능합니다.".formatted(username));
 
             return RsData.of("S-2", "%s님에 대해서 호감표시가 가능합니다.".formatted(username));
@@ -222,15 +227,81 @@ public class LikeablePersonService {
             return RsData.of("F-2", "해당 호감표시에 대해 사유변경을 수행할 권한이 없습니다.");
         }
 
-        if(!likeablePerson.isModifyUnlocked()){
+        if (!likeablePerson.isModifyUnlocked()) {
             return RsData.of("F-3", "아직 호감사유변경을 할 수 없습니다. %s 후에는 가능합니다.".formatted(likeablePerson.getModifyUnlockDateRemainStrHuman()));
         }
 
         return RsData.of("S-1", "호감사유변경이 가능합니다.");
     }
 
-    public List<LikeablePerson> findByToInstaMember(InstaMember toInstaMember) {
-        return likeablePersonRepository.findByToInstaMember(toInstaMember);
+    public List<LikeablePerson> findByToInstaMember(InstaMember instaMember, String gender, int attractiveTypeCode, int sortCode) {
+        // 호감 정보 스트림 형태로 가져오기(메서드 연산 계속 Stream으로 하기에 중복로직 없애기)
+        Stream<LikeablePerson> likeablePeople = instaMember.getToLikeablePeople().stream();
+        // 호감 표시한 사람의 성별로 필터링
+        likeablePeople = filterByGender(likeablePeople, gender);
+        // 호감 사유별 필터링
+        likeablePeople = filterByAttractiveTypeCode(likeablePeople, attractiveTypeCode);
+        // 정렬 코드별 정렬
+        likeablePeople = sortBySortCode(likeablePeople, sortCode);
+
+        return likeablePeople.collect(Collectors.toList());
+
     }
 
+    private Stream<LikeablePerson> sortBySortCode(Stream<LikeablePerson> likeablePeople, int sortCode) {
+        switch (sortCode) {
+            // 오래된 순이니 정렬(기존은 최신순 정렬 -> case 1은 고려x)
+            // Id에 index가 있으니, 속도가 좀 더 빠름
+            case 2 -> likeablePeople = likeablePeople
+                    .sorted(Comparator.comparing(likeablePerson -> likeablePerson.getId()));
+
+            // 인기 많은 순
+            case 3 -> likeablePeople = likeablePeople
+                    .sorted(comparing((LikeablePerson a) -> a.getToInstaMember().getLikes(), Comparator.reverseOrder())
+                            .thenComparing(a -> a.getId(), Comparator.reverseOrder())
+                    );
+
+            // 인기 적은순
+            case 4 -> likeablePeople = likeablePeople
+                    .sorted(comparing((LikeablePerson a) -> a.getToInstaMember().getLikes())
+                            .thenComparing(a -> a.getId(), Comparator.reverseOrder())
+                    );
+
+            // 성별순
+            // 동일하면 최신순 -> CreateDate 대신 Id => index 활용
+            case 5 -> likeablePeople = likeablePeople
+                    // 알파벳 "M", "W" 순이니 역순으로 해야 여성부터
+                    .sorted(Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender(), Comparator.reverseOrder())
+                            .thenComparing(lp -> lp.getId(), Comparator.reverseOrder())
+                    );
+            // 호감사유 순
+            case 6 -> likeablePeople = likeablePeople
+                    .sorted(Comparator.comparing(((LikeablePerson lp) -> lp.getAttractiveTypeCode()))
+                            .thenComparing(lp -> lp.getId(), Comparator.reverseOrder())
+                    );
+        }
+
+        return likeablePeople;
+    }
+
+    private Stream<LikeablePerson> filterByAttractiveTypeCode(Stream<LikeablePerson> likeablePeople, int attractiveTypeCode) {
+        // 0인 경우는 "전체"를 갖도록 수정하였기에, 0인경우는 그대로 반환
+        if (attractiveTypeCode == 0)
+            return likeablePeople;
+
+        // 값이 있는 경우는 호감 사유별 필터링
+        return likeablePeople
+                .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode() == attractiveTypeCode);
+    }
+
+    private Stream<LikeablePerson> filterByGender(Stream<LikeablePerson> likeablePeople, String gender) {
+
+        // 값이 없는경우는 전체를 뜻함으로 정렬 미시행
+        if (gender.equals(""))
+            return likeablePeople;
+
+        // 값이 있는 경우는 성별 필터링, 호감 표시자(from)의 성별 검사하여 리스트화
+        return likeablePeople
+                .filter(likeablePerson -> likeablePerson.getFromInstaMember().getGender().equals(gender));
+    }
 }
