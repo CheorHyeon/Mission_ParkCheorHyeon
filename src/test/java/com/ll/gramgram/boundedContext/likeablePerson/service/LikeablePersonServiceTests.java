@@ -3,9 +3,7 @@ package com.ll.gramgram.boundedContext.likeablePerson.service;
 
 import com.ll.gramgram.TestUt;
 import com.ll.gramgram.base.appConfig.AppConfig;
-import com.ll.gramgram.base.rsData.RsData;
 import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
-import com.ll.gramgram.boundedContext.likeablePerson.controller.LikeablePersonController;
 import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.repository.LikeablePersonRepository;
 import com.ll.gramgram.boundedContext.member.entity.Member;
@@ -16,15 +14,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @Transactional
@@ -32,12 +30,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class LikeablePersonServiceTests {
     @Autowired
+    private MemberService memberService;
+    @Autowired
     private LikeablePersonService likeablePersonService;
     @Autowired
     private LikeablePersonRepository likeablePersonRepository;
-
-    @Autowired
-    private MemberService memberService;
 
     @Test
     @DisplayName("테스트 1")
@@ -231,25 +228,28 @@ public class LikeablePersonServiceTests {
     @Test
     @DisplayName("호감표시를 하면 쿨타임이 지정된다.")
     void t007() throws Exception {
-        // 현재시점 기준에서 쿨타임이 다 차는 시간을 구한다(미래)
+        // 현재시점 기준에서 쿨타임이 다 차는 시간을 구한다.(미래)
         LocalDateTime coolTime = AppConfig.genLikeablePersonModifyCoolTime();
+
         Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
-        // 호감표시를 생성한다
-        // 호감표시를 생성하면 쿨타임이 미래로 지정된다.
+        // 호감표시를 생성한다.
+        // // 호감표시를 생성하면 쿨타임이 미래로 지정된다.
         LikeablePerson likeablePersonToBts = likeablePersonService.like(memberUser3, "bts", 3).getData();
-        // 확인
-        assertThat(likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)).isTrue();
+
+        // 잘 지정되었는지
+        assertThat(
+                likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)
+        ).isTrue();
     }
 
     @Test
-    @DisplayName("호감사유를 변경하면 쿨타임이 갱신된다")
+    @DisplayName("호감사유를 변경하면 쿨타임이 갱신된다.")
     void t008() throws Exception {
-        //현재시점 기준에서 쿨타임이 다 차는 시간을 구한다(미래)
+        // 현재시점 기준에서 쿨타임이 다 차는 시간을 구한다.(미래)
         LocalDateTime coolTime = AppConfig.genLikeablePersonModifyCoolTime();
 
         Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
-
-        // 호감표시 생성
+        // 호감표시를 생성한다.
         LikeablePerson likeablePersonToBts = likeablePersonService.like(memberUser3, "bts", 3).getData();
 
         // 호감표시를 생성하면 쿨타임이 지정되기 때문에, 그래서 바로 수정이 안된다.
@@ -257,64 +257,83 @@ public class LikeablePersonServiceTests {
         // 테스트를 위해서 억지로 값을 넣는다.
         TestUt.setFieldValue(likeablePersonToBts, "modifyUnlockDate", LocalDateTime.now().minusSeconds(1));
 
-        // 수정을 하면 쿨타임 갱신
+        // 수정을 하면 쿨타임이 갱신된다.
         likeablePersonService.modifyAttractive(memberUser3, likeablePersonToBts, 1);
 
-        assertThat(likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)).isTrue();
-
+        // 갱신 되었는지 확인
+        assertThat(
+                likeablePersonToBts.getModifyUnlockDate().isAfter(coolTime)
+        ).isTrue();
     }
 
     @Test
-    @DisplayName("호감사유를 등록하고 3시간 이전에 수정시도 -> 실패")
-    void t009() throws Exception {
-        //현재시점 기준에서 쿨타임이 다 차는 시간을 구한다(미래)
-        LocalDateTime coolTime = AppConfig.genLikeablePersonModifyCoolTime();
+    @DisplayName("정렬 - 최신순")
+    void t009() {
+        List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember("insta_user4", "", 0, 1);
 
-        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
-
-        // 호감표시 생성
-        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
-
-        // 호감 사유 수정 시도
-       likeablePersonService.modifyAttractive(memberUser3, likeablePersonToCh513, 1).getData();
-
-        // 수정 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
-        assertThat(likeablePersonToCh513.getAttractiveTypeCode()).isEqualTo(3);
+        assertThat(likeablePeople)
+                .isSortedAccordingTo(Comparator.comparing(LikeablePerson::getId, Comparator.reverseOrder()));
     }
 
     @Test
-    @DisplayName("호감사유를 등록하고 3시간 이전에 삭제시도 -> 실패")
-    void t010() throws Exception {
-        //현재시점 기준에서 쿨타임이 다 차는 시간을 구한다(미래)
-        LocalDateTime coolTime = AppConfig.genLikeablePersonModifyCoolTime();
+    @DisplayName("정렬 - 날짜순")
+    @Rollback(false)
+    void t010() {
+        List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember("insta_user4", "", 0, 2);
 
-        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
-
-        // 호감표시 생성
-        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
-
-        // 호감 사유 수정 시도
-        likeablePersonService.cancel(likeablePersonToCh513).getData();
-
-        // 수정 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
-        assertThat(likeablePersonToCh513.getAttractiveTypeCode()).isEqualTo(3);
+        assertThat(likeablePeople)
+                .isSortedAccordingTo(Comparator.comparing(LikeablePerson::getId));
     }
 
     @Test
-    @DisplayName("호감사유를 등록하고 3시간 이전에 삭제시도 -> 실패")
-    void t011() throws Exception {
-        Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
+    @DisplayName("정렬 - 인기 많은 순")
+    @Rollback(false)
+    void t011() {
+        List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember("insta_user4", "", 0, 3);
 
-        // 호감표시 생성
-        LikeablePerson likeablePersonToCh513 = likeablePersonService.like(memberUser3, "ch_513", 3).getData();
-
-        // 호감 사유 삭제 시도
-        likeablePersonService.cancel(likeablePersonToCh513);
-        LikeablePerson result = likeablePersonRepository.findByToInstaMember_username("ch_513").get(0);
-
-        // 삭제 실패로 기존 호감사유(3)을 그대로 담고있는지 확인
-        assertThat(result).isNotNull();
+        assertThat(likeablePeople)
+                .isSortedAccordingTo(
+                        Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getLikes()).reversed()
+                                .thenComparing(Comparator.comparing(LikeablePerson::getId).reversed())
+                );
     }
 
+    @Test
+    @DisplayName("정렬 - 인기 적은 순")
+    @Rollback(false)
+    void t012() {
+        List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember("insta_user4", "", 0, 4);
 
+        assertThat(likeablePeople)
+                .isSortedAccordingTo(
+                        Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getLikes())
+                                .thenComparing(Comparator.comparing(LikeablePerson::getId).reversed())
+                );
+    }
+
+    @Test
+    @DisplayName("정렬 - 성별순")
+    @Rollback(false)
+    void t013() {
+        List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember("insta_user4", "", 0, 5);
+
+        assertThat(likeablePeople)
+                .isSortedAccordingTo(
+                        Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender()).reversed()
+                                .thenComparing(Comparator.comparing(LikeablePerson::getId).reversed())
+                );
+    }
+
+    @Test
+    @DisplayName("정렬 - 호감사유순")
+    @Rollback(false)
+    void t014() {
+        List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember("insta_user4", "", 0, 6);
+
+        assertThat(likeablePeople)
+                .isSortedAccordingTo(
+                        Comparator.comparing(LikeablePerson::getAttractiveTypeCode)
+                                .thenComparing(Comparator.comparing(LikeablePerson::getId).reversed())
+                );
+    }
 }

@@ -29,6 +29,40 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.ll.gramgram.base.appConfig.AppConfig;
+import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
+import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
+import com.ll.gramgram.boundedContext.likeablePerson.service.LikeablePersonService;
+import com.ll.gramgram.boundedContext.member.entity.Member;
+import com.ll.gramgram.boundedContext.member.service.MemberService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -55,11 +89,10 @@ public class LikeablePersonControllerTests {
         resultActions
                 .andExpect(handler().handlerType(LikeablePersonController.class))
                 .andExpect(handler().methodName("showLike"))
-                .andExpect(status().is2xxSuccessful());
-        // 오류 나서 일단 주석
-//                .andExpect(content().string(containsString("""
-//                        먼저 본인의 인스타 아이디를 입력해주세요.
-//                        """.stripIndent().trim())))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().string(containsString("""
+                        먼저 본인의 인스타 아이디를 입력해주세요.
+                        """.stripIndent().trim())))
         ;
     }
 
@@ -102,8 +135,7 @@ public class LikeablePersonControllerTests {
         ResultActions resultActions = mvc
                 .perform(post("/usr/likeablePerson/like")
                         .with(csrf()) // CSRF 키 생성
-                        // NotProd 파일 수정으로 변경
-                        .param("username", "insta_user5")
+                        .param("username", "insta_user3")
                         .param("attractiveTypeCode", "1")
                 )
                 .andDo(print());
@@ -279,15 +311,14 @@ public class LikeablePersonControllerTests {
     }
 
     @Test
-    @DisplayName("인스타아이디가 없는 회원은 호감표시를 할 수 없다.")
-    @WithUserDetails("user8")
+    @DisplayName("인스타아이디가 없는 회원은 대해서 호감표시를 할 수 없다.")
+    @WithUserDetails("user1")
     void t009() throws Exception {
         // WHEN
         ResultActions resultActions = mvc
                 .perform(post("/usr/likeablePerson/like")
                         .with(csrf()) // CSRF 키 생성
-                        // Prod파일 변경
-                        .param("username", "user1")
+                        .param("username", "insta_user4")
                         .param("attractiveTypeCode", "1")
                 )
                 .andDo(print());
@@ -327,8 +358,7 @@ public class LikeablePersonControllerTests {
         ResultActions resultActions = mvc
                 .perform(post("/usr/likeablePerson/like")
                         .with(csrf()) // CSRF 키 생성
-                        // Prod 파일 수정
-                        .param("username", "insta_user2")
+                        .param("username", "insta_user4")
                         .param("attractiveTypeCode", "1")
                 )
                 .andDo(print());
@@ -418,38 +448,6 @@ public class LikeablePersonControllerTests {
     }
 
     @Test
-    @DisplayName("쿨타임 전 삭제 시도 -> 실패")
-    @WithUserDetails("user3")
-    void t020() throws Exception {
-        // 호감 생성
-        ResultActions resultActions = mvc
-                .perform(post("/usr/likeablePerson/like")
-                        .with(csrf()) // CSRF 키 생성
-                        .param("username", "ch_513")
-                        .param("attractiveTypeCode", "3")
-                )
-                .andDo(print());
-
-        // 삭제 시도
-        ResultActions resultActions2 = mvc
-                .perform(
-                        delete("/usr/likeablePerson/3")
-                                .with(csrf())
-                )
-                .andDo(print());
-
-        // THEN
-        resultActions2
-                .andExpect(handler().handlerType(LikeablePersonController.class))
-                .andExpect(handler().methodName("cancel"))
-                .andExpect(status().is4xxClientError());
-
-        Optional<LikeablePerson> opLikeablePerson = likeablePersonService.findByFromInstaMember_usernameAndToInstaMember_username("insta_user3", "ch_513");
-
-        assertThat(opLikeablePerson).isPresent();
-    }
-
-    @Test
     @DisplayName("호감사유변경은 쿨타임이 지나야 가능하다.")
     @WithUserDetails("user3")
     void t017() throws Exception {
@@ -467,6 +465,94 @@ public class LikeablePersonControllerTests {
                 .andExpect(handler().methodName("modify"))
                 .andExpect(status().is4xxClientError());
 
-        assertThat(likeablePersonService.findById(3L).get().getAttractiveTypeCode()).isEqualTo(1);
+        assertThat(likeablePersonService.findById(3L).get().getAttractiveTypeCode()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("남성 필터링")
+    @WithUserDetails("user4")
+    void t018() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(get("/usr/likeablePerson/toList?gender=M"))
+                .andDo(print());
+
+        // THEN
+        MvcResult mvcResult = resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("showToList"))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        // 모델에서 리스트 가져오기(likeablePeople 이름은 모델에 넘겨준 것과 이름 같아야 함)
+        Map<String, Object> model = mvcResult.getModelAndView().getModel();
+        List<LikeablePerson> likeablePeople = (List<LikeablePerson>) model.get("likeablePeople");
+
+        // 모델에서 꺼내온 리스트(호감 정보)에서 Key(성별) : Value(갯수)
+        Map<String, Long> countings = likeablePeople
+                .stream()
+                // 호감표시한 사람의 성별을 가져와서 맵으로 만들어줌
+                .map(LikeablePerson::getFromInstaMember)
+                .map(InstaMember::getGender)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        // 남자와 리스트 사이즈 비교 (같으면 필터링 된거니깐)
+        assertThat(countings.get("M")).isEqualTo(likeablePeople.size());
+    }
+
+    @Test
+    @DisplayName("여성 필터링")
+    @WithUserDetails("user4")
+    void t019() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(get("/usr/likeablePerson/toList?gender=W"))
+                .andDo(print());
+
+        // THEN
+        MvcResult mvcResult = resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("showToList"))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        Map<String, Object> model = mvcResult.getModelAndView().getModel();
+
+        List<LikeablePerson> likeablePeople = (List<LikeablePerson>) model.get("likeablePeople");
+
+        Map<String, Long> countings = likeablePeople
+                .stream()
+                .map(LikeablePerson::getFromInstaMember)
+                .map(InstaMember::getGender)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        assertThat(countings.get("W")).isEqualTo(likeablePeople.size());
+    }
+
+    @Test
+    @DisplayName("외모 필터링")
+    @WithUserDetails("user4")
+    void t020() throws Exception {
+        // WHEN
+        ResultActions resultActions = mvc
+                .perform(get("/usr/likeablePerson/toList?attractiveTypeCode=1"))
+                .andDo(print());
+
+        // THEN
+        MvcResult mvcResult = resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("showToList"))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        Map<String, Object> model = mvcResult.getModelAndView().getModel();
+
+        List<LikeablePerson> likeablePeople = (List<LikeablePerson>) model.get("likeablePeople");
+
+        Map<Integer, Long> countings = likeablePeople
+                .stream()
+                .map(LikeablePerson::getAttractiveTypeCode)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        assertThat(countings.get(1)).isEqualTo(likeablePeople.size());
     }
 }

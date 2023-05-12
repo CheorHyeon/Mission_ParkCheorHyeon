@@ -249,37 +249,43 @@ public class LikeablePersonService {
     }
 
     private Stream<LikeablePerson> sortBySortCode(Stream<LikeablePerson> likeablePeople, int sortCode) {
-        switch (sortCode) {
-            // 오래된 순이니 정렬(기존은 최신순 정렬 -> case 1은 고려x)
+        likeablePeople = switch (sortCode) {
+            // 오래된 순이니 정렬(기존은 최신순 정렬)
             // Id에 index가 있으니, 속도가 좀 더 빠름
-            case 2 -> likeablePeople = likeablePeople
-                    .sorted(Comparator.comparing(likeablePerson -> likeablePerson.getId()));
+            case 2 ->likeablePeople
+                    .sorted(
+                            Comparator.comparing(likeablePerson -> likeablePerson.getId())
+                    );
 
             // 인기 많은 순
-            case 3 -> likeablePeople = likeablePeople
-                    .sorted(comparing((LikeablePerson a) -> a.getToInstaMember().getLikes(), Comparator.reverseOrder())
-                            .thenComparing(a -> a.getId(), Comparator.reverseOrder())
+            case 3 -> likeablePeople
+                    .sorted(
+                            Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getLikes()).reversed()
+                                    .thenComparing(Comparator.comparing(LikeablePerson::getId).reversed())
                     );
 
             // 인기 적은순
-            case 4 -> likeablePeople = likeablePeople
-                    .sorted(comparing((LikeablePerson a) -> a.getToInstaMember().getLikes())
-                            .thenComparing(a -> a.getId(), Comparator.reverseOrder())
+            case 4 ->  likeablePeople
+                    .sorted(
+                            Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getLikes())
+                                    .thenComparing(Comparator.comparing(LikeablePerson::getId).reversed())
                     );
 
             // 성별순
             // 동일하면 최신순 -> CreateDate 대신 Id => index 활용
-            case 5 -> likeablePeople = likeablePeople
+            case 5 -> likeablePeople
                     // 알파벳 "M", "W" 순이니 역순으로 해야 여성부터
                     .sorted(Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender(), Comparator.reverseOrder())
                             .thenComparing(lp -> lp.getId(), Comparator.reverseOrder())
                     );
             // 호감사유 순
-            case 6 -> likeablePeople = likeablePeople
+            case 6 -> likeablePeople
                     .sorted(Comparator.comparing(((LikeablePerson lp) -> lp.getAttractiveTypeCode()))
                             .thenComparing(lp -> lp.getId(), Comparator.reverseOrder())
                     );
-        }
+
+            default -> likeablePeople;
+        };
 
         return likeablePeople;
     }
@@ -292,6 +298,11 @@ public class LikeablePersonService {
         // 값이 있는 경우는 호감 사유별 필터링
         return likeablePeople
                 .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode() == attractiveTypeCode);
+    }
+
+    // 테스트 케이스용 코드
+    public List<LikeablePerson> findByToInstaMember(String username, String gender, int attractiveTypeCode, int sortCode) {
+        return findByToInstaMember(instaMemberService.findByUsername(username).get(), gender, attractiveTypeCode, sortCode);
     }
 
     private Stream<LikeablePerson> filterByGender(Stream<LikeablePerson> likeablePeople, String gender) {
