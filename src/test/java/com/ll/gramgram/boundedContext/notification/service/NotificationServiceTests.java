@@ -60,7 +60,7 @@ public class NotificationServiceTests {
         Member memberUser3 = memberService.findByUsername("user3").orElseThrow();
         Member memberUser4 = memberService.findByUsername("user4").orElseThrow();
 
-        // 기존에 호감 표시 : insta_use3 -> insta_user4, 호감사유코드 : 1
+        // 기존에 호감 표시 : insta_use3 -> insta_user4, 호감사유코드 : 3 (4주차 필터링 미션하면서 구분하기 위해 바꿈)
         // 바뀐 호감 표시 : insta_use3 -> insta_user4, 호감사유코드 : 2
         likeablePersonService.modifyAttractive(memberUser3, "insta_user4", 2);
 
@@ -74,7 +74,7 @@ public class NotificationServiceTests {
         assertThat(lastNotification.getFromInstaMember().getUsername()).isEqualTo("insta_user3");
         // 알림의 사유가 LIKE 인지 체크
         assertThat(lastNotification.getTypeCode()).isEqualTo("MODIFY_ATTRACTIVE_TYPE");
-        // 알림내용 중에서 기존 호감사유코드가 1 인지 체크
+        // 알림내용 중에서 기존 호감사유코드가 3 인지 체크
         assertThat(lastNotification.getOldAttractiveTypeCode()).isEqualTo(1);
         // 알림내용 중에서 새 호감사유코드가 2 인지 체크
         assertThat(lastNotification.getNewAttractiveTypeCode()).isEqualTo(2);
