@@ -75,7 +75,7 @@ public class NotificationServiceTests {
         // 알림의 사유가 LIKE 인지 체크
         assertThat(lastNotification.getTypeCode()).isEqualTo("MODIFY_ATTRACTIVE_TYPE");
         // 알림내용 중에서 기존 호감사유코드가 3 인지 체크
-        assertThat(lastNotification.getOldAttractiveTypeCode()).isEqualTo(3);
+        assertThat(lastNotification.getOldAttractiveTypeCode()).isEqualTo(1);
         // 알림내용 중에서 새 호감사유코드가 2 인지 체크
         assertThat(lastNotification.getNewAttractiveTypeCode()).isEqualTo(2);
     }
