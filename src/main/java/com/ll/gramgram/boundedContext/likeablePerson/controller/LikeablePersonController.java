@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
 
@@ -114,7 +115,7 @@ public class LikeablePersonController {
             if (!gender.equals(""))
                 gender = gender.trim();
             // 호감 정보 가져오기
-            List<LikeablePerson> likeablePeople = likeablePersonService.findByToInstaMember(instaMember);
+            Stream<LikeablePerson> likeablePeople = instaMember.getToLikeablePeople().stream();
             // 호감 표시한 사람의 성별로 필터링
             likeablePeople = filterByGender(likeablePeople, gender);
             // 호감 사유별 필터링
@@ -122,77 +123,67 @@ public class LikeablePersonController {
             // 정렬 코드별 정렬
             likeablePeople = sortBySortCode(likeablePeople, sortCode);
 
-            model.addAttribute("likeablePeople", likeablePeople);
+            model.addAttribute("likeablePeople", likeablePeople.collect(Collectors.toList()));
         }
 
         return "usr/likeablePerson/toList";
     }
 
-    private List<LikeablePerson> sortBySortCode(List<LikeablePerson> likeablePeople, int sortCode) {
+    private Stream<LikeablePerson> sortBySortCode(Stream<LikeablePerson> likeablePeople, int sortCode) {
         switch (sortCode) {
-            // 오래된 순이니 그대로 리턴
-            case 2 -> {
-                return likeablePeople;
-            }
+            // 오래된 순이니 정렬(기존은 최신순 정렬 -> case 1은 고려x)
+            // Id에 index가 있으니, 속도가 좀 더 빠름
+            case 2 -> likeablePeople = likeablePeople
+                    .sorted(Comparator.comparing(likeablePerson -> likeablePerson.getId()));
+
             // 인기 많은 순
-            case 3 -> {
-                likeablePeople = likeablePeople.stream()
-                        .sorted((a, b) -> b.getFromInstaMember().getToLikeablePeople().size() - a.getFromInstaMember().getToLikeablePeople().size())
-                        .collect(Collectors.toList());
-            }
+            case 3 -> likeablePeople = likeablePeople
+                    .sorted(comparing((LikeablePerson a) -> a.getToInstaMember().getLikes(), Comparator.reverseOrder())
+                            .thenComparing(a -> a.getId(), Comparator.reverseOrder())
+                    );
+
             // 인기 적은순
-            case 4 -> {
-                likeablePeople = likeablePeople.stream()
-                        // (a, b)로 했으나 변경
-                        .sorted(Comparator.comparingInt(a -> a.getFromInstaMember().getToLikeablePeople().size()))
-                        .collect(Collectors.toList());
-            }
+            case 4 -> likeablePeople = likeablePeople
+                    .sorted(comparing((LikeablePerson a) -> a.getToInstaMember().getLikes())
+                            .thenComparing(a -> a.getId(), Comparator.reverseOrder())
+                    );
+
             // 성별순
-            case 5 -> {
-                likeablePeople = likeablePeople.stream()
-                        // 알파벳 "M", "W" 순이니 역순으로 해야 여성부터
-                        .sorted(Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender()).reversed()
-                                .thenComparing(Comparator.comparing(LikeablePerson::getCreateDate).reversed()))
-                        .collect(Collectors.toList());
-            }
+            // 동일하면 최신순 -> CreateDate 대신 Id => index 활용
+            case 5 -> likeablePeople = likeablePeople
+                    // 알파벳 "M", "W" 순이니 역순으로 해야 여성부터
+                    .sorted(Comparator.comparing((LikeablePerson lp) -> lp.getFromInstaMember().getGender(), Comparator.reverseOrder())
+                            .thenComparing(lp -> lp.getId(), Comparator.reverseOrder())
+                    );
             // 호감사유 순
-            case 6 -> {
-                likeablePeople = likeablePeople.stream()
-                        .sorted(Comparator.comparing(LikeablePerson::getAttractiveTypeCode)
-                                .thenComparing(Comparator.comparing(LikeablePerson::getCreateDate).reversed()))
-                        .collect(Collectors.toList());
-            }
-            // 기본은 최신순 1번
-            default -> likeablePeople = likeablePeople
-                    .stream()
-                    .sorted(comparing(LikeablePerson::getCreateDate).reversed())
-                    .collect(Collectors.toList());
+            case 6 -> likeablePeople = likeablePeople
+                    .sorted(Comparator.comparing(((LikeablePerson lp) -> lp.getAttractiveTypeCode()))
+                            .thenComparing(lp -> lp.getId(), Comparator.reverseOrder())
+                    );
         }
 
         return likeablePeople;
     }
 
-    private List<LikeablePerson> filterByAttractiveTypeCode(List<LikeablePerson> likeablePeople, int attractiveTypeCode) {
+    private Stream<LikeablePerson> filterByAttractiveTypeCode(Stream<LikeablePerson> likeablePeople, int attractiveTypeCode) {
         // 0인 경우는 "전체"를 갖도록 수정하였기에, 0인경우는 그대로 반환
         if (attractiveTypeCode == 0)
             return likeablePeople;
 
         // 값이 있는 경우는 호감 사유별 필터링
-        return likeablePeople.stream()
-                .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode() == attractiveTypeCode)
-                .collect(Collectors.toList());
+        return likeablePeople
+                .filter(likeablePerson -> likeablePerson.getAttractiveTypeCode() == attractiveTypeCode);
     }
 
-    private List<LikeablePerson> filterByGender(List<LikeablePerson> likeablePeople, String gender) {
+    private Stream<LikeablePerson> filterByGender(Stream<LikeablePerson> likeablePeople, String gender) {
 
         // 값이 없는경우는 전체를 뜻함으로 정렬 미시행
         if (gender.equals(""))
             return likeablePeople;
 
         // 값이 있는 경우는 성별 필터링, 호감 표시자(from)의 성별 검사하여 리스트화
-        return likeablePeople.stream()
-                .filter(likeablePerson -> likeablePerson.getFromInstaMember().getGender().equals(gender))
-                .collect(Collectors.toList());
+        return likeablePeople
+                .filter(likeablePerson -> likeablePerson.getFromInstaMember().getGender().equals(gender));
     }
 
     @AllArgsConstructor
