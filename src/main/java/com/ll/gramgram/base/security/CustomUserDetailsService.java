@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = false)
+// 일반 로그인 시 실행
 public class CustomUserDetailsService implements UserDetailsService {
     private final MemberRepository memberRepository;
 
