@@ -4,7 +4,8 @@ spring:
     include: secret
   autoconfigure:
     exclude:
-
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
   mvc:
     hiddenmethod:
       filter:
