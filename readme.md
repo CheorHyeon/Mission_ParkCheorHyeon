@@ -1,84 +1,30 @@
-# 할일!!!!
+<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<a name="readme-top"></a>
 
-- [x] 내가 받은 호감 리스트
-  - [x] 성별 필터링
-  - [x] 호감사유 필터링
-    - [x] 원활한 테스트를 위해서 인스타 사용자 user4 가 다수의 호감표시를 받도록 NotProd 변경
-    - [x] NotProd 변경에 따른 테스트케이스 수정
-  - [x] 정렬
-    - [x] 최신순
-      - 애초에 최신순으로 정렬되어 있었음
-      - 그래서 딱히 할게 없음
-    - [x] 날짜순
-      - id DESC
-    - [x] 인기많은순
-      - likeCount DESC, id DESC
-      - 이 작업을 위해 NotProd 에서 호감표시건을 더 만듬
-    - [x] 인기적은순
-      - likeCount ASC, id DESC
-    - [x] 성별순
-      - gender DESC, id DESC
-    - [x] 호감사유순
-      - gender ASC, id DESC
-    - [x] 테스트케이스
-- [x] 알림
-  - [x] 호감표시할 때 알림생성
-  - [x] 호감사유변경할 때 알림생성
-  - [x] 알림목록
-  - [x] 알림목록 확인 시 마다, 아직 readDate 가 null 인것들만 추려서 날짜갱신
-  - [x] 상단바에 아직 읽지 않은 알림이 존재하는지 인디케이터로 표시
-- [ ] 호감에 대한 수정/삭제 쿨타임
-  - [x] 설정정보 가져오기
-  - [x] 호감표시/호감사유변경 시에 modifyUnlockDate 갱신(현재날짜 + 쿨타임)
-  - [x] UI에서 쿨타임 안차면 수정/삭제 못 하도록
-  - [x] UI에서 남은시간 표시
-  - [x] LikeablePersonService::canCancel 에 쿨타임 체크 추가
-  - [x] LikeablePersonService::canModifyLike 에 쿨타임 체크 추가
-  - [x] TC : 호감사유를 변경하면 쿨타임이 갱신된다. 실패, 해결
-- [x] 회원가입 폼
-  - [x] 로그인 상태에서 들어올 수 없다.
-  - [x] 폼이 있어야 한다.
-  - [x] input[name="username"] 필드가 있어야 한다.
-  - [x] input[name="password"] 필드가 있어야 한다.
-  - [x] 폼 체크
-- [x] 회원가입 폼 처리
-  - [x] 로그인 상태에서 들어올 수 없다.
-  - [x] 유효성 체크를 해야 한다.
-  - [x] member 테이블에 회원이 저장되어야 한다.
-  - [x] 처리 후에 / 로 이동해야 한다. 302
-  - [x] 회원가입이 완료되었습니다. /usr/member/login 으로 302
-- [x] 로그인 폼
-  - [x] 로그인 상태에서 들어올 수 없다.
-  - [x] 폼이 있어야 한다.
-  - [x] input[name="username"] 필드가 있어야 한다.
-  - [x] input[name="password"] 필드가 있어야 한다.
-  - [x] 폼 체크
-- [x] 로그인 폼 처리(스프링 시큐리티가 알아서 해줌)
-  - [x] 세션에 데이터가 들어있는지 확인
-- [x] 레이아웃 네비바 구현
-  - [x] 로그인 버튼
-  - [x] 회원가입 버튼
-  - [x] 로그아웃 버튼
-- [x] 로그인 후에는 내비바에 로그인된 회원의 username 이 보여야 한다.
-- [x] 정적파일 정리
-  - [x] 두루두루 사용되는 CSS 를 common.css 로 모으기
-  - [x] 두루두루 사용되는 JS 를 common.js 로 모으기
-- [x] toastMsg 에 ttl 기능 추가
-- [x] 인스타그램 회원정보 입력
-  - [x] 입력한 인스타그램 ID가 이미 존재하더라도, 그것의 성별이 아직 U 이면 연결가능
-  - [x] 로그인한 사람만 가능
-  - [x] 아이디
-  - [x] 성별
-- [x] 인스타그램 회원정보 입력 폼 처리
-  - [x] 로그인한 사람만 가능
-  - [x] 아이디
-  - [x] 성별
-  - [x] 회원과 인스타회원의 연결
-  - [x] 성공했을 때 호감표시 페이지로 이동
-- [x] 본인이 좋아하는 사람 등록 폼
-  - [x] 본인의 인스타그램 회원정보 입력을 완료한 사람만 가능
-  - [x] 인스타그램 아이디
-  - [x] 매력포인트(외모, 성격, 능력)
-- [x] 본인이 좋아하는 사람 등록 폼 처리
-  - [x] 아직 우리 서비스에 등록되지 않은 인스타 유저에게도 호감표시 가능
-- [x] 엔티티 클래스의 중복로직 제거
+<!-- PROJECT LOGO -->
+<br />
+<h3 align="center">그램그램(GramGram)</h3>
+
+  <p align="center">
+    멋쟁이 사자처럼 백엔드 스쿨 3기 - 스프링부트 기능 구현 미션 프로젝트
+    <br />
+  </p>
+</div>
+
+<!-- ABOUT THE PROJECT -->
+## 프로젝트 개요
+- 멋쟁이 사자처럼 백엔드스쿨 3기 - 스프링부트 수업 및 기능 구현 미션을 위한 프로젝트로 인스타ID 기반 익명호감표시 서비스 구현.
+- 본인의 인스타ID를 입력하면, 현재 자신에게 이성적으로 호감을 느끼고 있는 사람이 몇명인지 알 수 있다.
+- 나를 좋아하는 상대방이 나의 어떤 매력포인트 때문에 좋아하는지 알 수 있으며, 상대방의 성별도 알 수 있다.
+
+## 각 주차별 달성 미션
+- [1주차 미션 보러가기](https://github.com/CheorHyeon/Mission_ParkCheorHyeon/pull/1)
+  - 수업 이후 구글 로그인 보완 
+- [2주차 미션 보러가기 1](https://github.com/CheorHyeon/Mission_ParkCheorHyeon/pull/2)
+  - [2주차 미션 보러가기 2](https://github.com/CheorHyeon/Mission_ParkCheorHyeon/pull/3) => 수정
+- [3주차 미션 보러가기](https://github.com/CheorHyeon/Mission_ParkCheorHyeon/pull/5)
+- [4주차 미션 보러가기](https://github.com/CheorHyeon/Mission_ParkCheorHyeon/pull/6)
+
+
+
+<!-- 템플릿 출처 : https://github.com/othneildrew/Best-README-Template -->
